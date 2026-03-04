@@ -4,6 +4,7 @@ A minimal local AI agent endpoint. One dependency: a GitHub account.
 
 ## Quickstart
 
+### macOS / Linux
 ```bash
 # 1. Authenticate with GitHub
 gh auth login
@@ -13,6 +14,20 @@ git clone <this-repo>
 cd rapp_brainstem
 ./start.sh
 ```
+
+### Windows (PowerShell)
+```powershell
+# 1. Authenticate with GitHub
+gh auth login
+
+# 2. Clone and start
+git clone <this-repo>
+cd rapp_brainstem
+.\start.ps1
+```
+
+> **Note:** If `gh` is not installed, you can skip step 1 — the web UI at
+> `http://localhost:7071` will walk you through GitHub device-code login.
 
 That's it. Your endpoint is live at `http://localhost:7071`.
 
@@ -81,7 +96,7 @@ SOUL_PATH=/path/to/my/private/soul.md
 AGENTS_PATH=/path/to/my/private/agents
 ```
 
-Then `./start.sh` — brainstem loads your soul and agents. The brainstem code never needs to change.
+Then `./start.sh` (or `.\start.ps1` on Windows) — brainstem loads your soul and agents. The brainstem code never needs to change.
 
 ---
 

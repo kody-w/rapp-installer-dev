@@ -71,9 +71,24 @@ def get_github_token():
                 return token
     # 3. gh CLI
     try:
+        env = os.environ.copy()
+        # On Windows, refresh PATH so we can find gh even in a new process
+        if sys.platform == "win32":
+            machine = os.environ.get("Path", "")
+            try:
+                import winreg
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment") as key:
+                    machine = winreg.QueryValueEx(key, "Path")[0]
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Environment") as key:
+                    user = winreg.QueryValueEx(key, "Path")[0]
+                env["Path"] = machine + ";" + user
+            except Exception:
+                pass
         result = subprocess.run(
             ["gh", "auth", "token"],
-            capture_output=True, text=True, timeout=5
+            capture_output=True, text=True, timeout=5,
+            shell=(sys.platform == "win32"),
+            env=env,
         )
         token = result.stdout.strip()
         if token:
@@ -802,10 +817,15 @@ def toggle_agent():
 
 @app.route("/health", methods=["GET"])
 def health():
+    agents = {}
+    try:
+        agents = get_all_agents()
+    except Exception:
+        pass
+    soul_ok = os.path.exists(SOUL_PATH)
+
     try:
         copilot_token, endpoint = get_copilot_token()
-        agents  = get_all_agents()
-        soul_ok = os.path.exists(SOUL_PATH)
         return jsonify({
             "status": "ok",
             "model":  MODEL,
@@ -815,7 +835,15 @@ def health():
             "endpoint": endpoint,
         })
     except Exception as e:
-        return jsonify({"status": "error", "error": str(e)}), 500
+        # Return 200 with unauthenticated status so the UI shows the login overlay
+        # instead of treating it as a server error
+        return jsonify({
+            "status": "unauthenticated",
+            "error": str(e),
+            "model":  MODEL,
+            "soul":   SOUL_PATH if soul_ok else "missing",
+            "agents": list(agents.keys()),
+        })
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
