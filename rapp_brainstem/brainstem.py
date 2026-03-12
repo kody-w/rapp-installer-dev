@@ -662,9 +662,12 @@ def chat():
             response = call_copilot(messages, tools=tools)
             choice   = response["choices"][0]
             msg      = choice["message"]
+            finish   = choice.get("finish_reason", "")
             messages.append(msg)
 
-            if choice.get("finish_reason") == "tool_calls" and msg.get("tool_calls"):
+            # Some models use finish_reason "tool_calls", others just include tool_calls in the message
+            if msg.get("tool_calls"):
+                print(f"[brainstem] Tool calls triggered (finish_reason={finish}): {[tc['function']['name'] for tc in msg['tool_calls']]}")
                 tool_results, logs = run_tool_calls(msg["tool_calls"], agents)
                 all_logs.extend(logs)
                 messages.extend(tool_results)

@@ -203,16 +203,17 @@
     margin-top: 8px;
     padding: 8px 12px;
     background: #0d1117;
-    border: 1px solid #21262d;
+    border: 1px solid #3fb950;
     border-radius: 6px;
     font-size: 11px;
-    color: #8b949e;
+    color: #3fb950;
     font-family: "SF Mono", monospace;
     white-space: pre-wrap;
   }
   .logs-label {
     font-size: 10px;
     color: #3fb950;
+    font-weight: 600;
     font-family: "SF Mono", monospace;
     margin-bottom: 4px;
     text-transform: uppercase;
@@ -659,7 +660,7 @@
         sessionId = d.session_id;
         document.getElementById('session-id').textContent = sessionId?.slice(0, 8) + '...';
         history.push({ role: 'assistant', content: d.response });
-        appendMsg('assistant', d.response, d.agent_logs || null);
+        appendMsg('assistant', d.response, d.agent_logs && d.agent_logs.trim() ? d.agent_logs : null);
         if (d.voice_response) {
           speakText(d.voice_response);
         } else if (voiceMode) {
