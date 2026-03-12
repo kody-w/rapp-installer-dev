@@ -189,6 +189,7 @@ _copilot_token_cache = {"token": None, "endpoint": None, "expires_at": 0}
 def _exchange_github_for_copilot(github_token):
     """Exchange a GitHub token for a Copilot API token. Returns (token, endpoint, expires_at) or raises."""
     auth_prefix = "token" if github_token.startswith("ghu_") else "Bearer"
+    print(f"[brainstem] Exchanging token (prefix: {github_token[:8]}..., auth: {auth_prefix})")
     resp = requests.get(
         COPILOT_TOKEN_URL,
         headers={
@@ -196,9 +197,11 @@ def _exchange_github_for_copilot(github_token):
             "Accept": "application/json",
             "Editor-Version": "vscode/1.95.0",
             "Editor-Plugin-Version": "copilot/1.0.0",
+            "User-Agent": "GitHubCopilotChat/0.22.2024",
         },
         timeout=10,
     )
+    print(f"[brainstem] Exchange response: HTTP {resp.status_code} — {resp.text[:300]}")
     return resp
 
 def get_copilot_token():
@@ -223,17 +226,22 @@ def get_copilot_token():
     
     resp = _exchange_github_for_copilot(github_token)
     
-    # 4. If 401, the GitHub token may have expired — try refreshing it
-    if resp.status_code in (401, 404):
+    # 4. If error, the GitHub token may have expired — try refreshing it
+    if resp.status_code in (401, 403, 404):
         refreshed = refresh_github_token()
         if refreshed:
             resp = _exchange_github_for_copilot(refreshed)
-        if resp.status_code in (401, 404):
+        if resp.status_code in (401, 403, 404):
             # Token exchange failed — NEVER delete the token file.
             # Transient failures shouldn't require full re-auth.
-            print(f"[brainstem] Copilot token exchange failed (HTTP {resp.status_code}). Token preserved for retry.")
+            try:
+                err_body = resp.json()
+                err_msg = err_body.get("message", resp.text[:200])
+            except Exception:
+                err_msg = resp.text[:200]
+            print(f"[brainstem] Copilot token exchange failed (HTTP {resp.status_code}): {err_msg}")
             raise RuntimeError(
-                "Not authenticated. Sign in with GitHub to use Copilot AI."
+                f"Copilot auth failed ({resp.status_code}): {err_msg}. Sign in with GitHub to retry."
             )
     resp.raise_for_status()
     
@@ -685,6 +693,34 @@ def health():
             "soul":   SOUL_PATH if soul_ok else "missing",
             "agents": list(agents.keys()),
         })
+
+@app.route("/debug/auth", methods=["GET"])
+def debug_auth():
+    """Debug endpoint — shows current auth state and tests token exchange."""
+    token = get_github_token()
+    token_data = _read_token_file()
+    copilot_cache = _load_copilot_cache()
+
+    result = {
+        "github_token_exists": token is not None,
+        "github_token_prefix": token[:10] + "..." if token else None,
+        "github_token_length": len(token) if token else 0,
+        "token_file_exists": os.path.exists(_token_file),
+        "token_file_has_refresh": bool(token_data and token_data.get("refresh_token")),
+        "copilot_cache_exists": copilot_cache is not None,
+        "copilot_cache_expires_in": int(copilot_cache["expires_at"] - time.time()) if copilot_cache else None,
+        "copilot_memory_cache": bool(_copilot_token_cache["token"]),
+    }
+
+    if token:
+        try:
+            resp = _exchange_github_for_copilot(token)
+            result["exchange_http_status"] = resp.status_code
+            result["exchange_response"] = resp.text[:500]
+        except Exception as e:
+            result["exchange_error"] = str(e)
+
+    return jsonify(result)
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
