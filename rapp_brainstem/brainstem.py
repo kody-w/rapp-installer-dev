@@ -657,7 +657,29 @@ def chat():
         agents = load_agents()
         tools  = [a.to_tool() for a in agents.values()] if agents else None
 
-        system_content = soul
+        # ── Load persistent memory into system prompt (matches CommunityRAPP) ──
+        memory_context = ""
+        ctx_agent = agents.get("ContextMemory")
+        if ctx_agent:
+            try:
+                shared_mem = str(ctx_agent.perform(full_recall=True))
+                memory_context = f"""
+<memory>
+{shared_mem}
+</memory>
+
+<memory_instructions>
+- The above are stored memories from previous conversations
+- Use them to provide continuity and personalized responses
+- When the user asks what you remember, reference these memories
+- Use ManageMemory to store new important facts the user shares
+</memory_instructions>
+"""
+                print(f"[brainstem] Memory loaded: {len(shared_mem)} chars")
+            except Exception as e:
+                print(f"[brainstem] Memory load failed: {e}")
+
+        system_content = soul + memory_context
         if VOICE_MODE:
             system_content += "\n\nIMPORTANT: End every response with |||VOICE||| followed by a concise, conversational version of your answer suitable for text-to-speech. Keep the voice version under 2-3 sentences. The part before |||VOICE||| should be the full formatted response."
 
