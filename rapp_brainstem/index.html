@@ -329,6 +329,7 @@
 
   // Health check — also handles login state
   let loginInProgress = false;
+  let loginGracePeriod = false;
   async function checkHealth() {
     try {
       const r = await fetch(`${API}/health`);
@@ -338,12 +339,13 @@
         document.getElementById('status-text').textContent = d.copilot ? 'copilot ✓' : 'online';
         document.getElementById('login-overlay').style.display = 'none';
         loginInProgress = false;
+        loginGracePeriod = false;
         loadModels();
       } else {
-        // Not authenticated — but don't interrupt an active login flow
         document.getElementById('dot').className = 'dot offline';
         document.getElementById('status-text').textContent = 'not signed in';
-        if (!loginInProgress) {
+        // Don't show login overlay if we just finished auth or auth is in progress
+        if (!loginInProgress && !loginGracePeriod) {
           document.getElementById('login-overlay').style.display = 'flex';
         }
       }
@@ -353,7 +355,7 @@
     }
   }
   checkHealth();
-  setInterval(checkHealth, 30000);  // Poll less aggressively (30s instead of 10s)
+  setInterval(checkHealth, 30000);
 
   // Device code login
   async function startLogin() {
@@ -392,16 +394,21 @@
       if (d.status === 'ok') {
         document.getElementById('login-step2').style.display = 'none';
         document.getElementById('login-step3').style.display = 'block';
-        // Give the server a moment to process, then verify via health check
-        setTimeout(async () => {
-          loginInProgress = false;
-          await checkHealth();
-          // If health check confirmed OK, overlay is already hidden.
-          // If not, give it one more try after a short delay.
-          if (document.getElementById('login-overlay').style.display !== 'none') {
-            setTimeout(checkHealth, 3000);
-          }
-        }, 2000);
+        loginInProgress = false;
+        loginGracePeriod = true;
+        // Hide overlay immediately — auth succeeded
+        setTimeout(() => {
+          document.getElementById('login-overlay').style.display = 'none';
+          // Reset login steps for next time
+          document.getElementById('login-step1').style.display = 'block';
+          document.getElementById('login-step2').style.display = 'none';
+          document.getElementById('login-step3').style.display = 'none';
+          document.querySelector('.login-btn').disabled = false;
+        }, 1500);
+        // Keep grace period for 30s so health check doesn't re-show overlay
+        // while the Copilot token exchange catches up
+        setTimeout(() => { loginGracePeriod = false; }, 30000);
+        checkHealth();
         return;
       }
       // Still pending — poll again
