@@ -88,6 +88,34 @@
   }
   .login-status { color: #8b949e; font-size: 13px; margin-top: 16px; }
   .login-success { color: #3fb950; }
+  .code-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .code-row .device-code { margin: 0; }
+  .copy-btn {
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #8b949e;
+    cursor: pointer;
+    padding: 6px 8px;
+    font-size: 16px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover { background: #30363d; color: #e6edf3; border-color: #484f58; }
+  .copy-btn.copied { background: #238636; color: #fff; border-color: #2ea043; }
+  .copy-toast {
+    font-size: 12px;
+    color: #3fb950;
+    height: 18px;
+    margin-top: 4px;
+    transition: opacity 0.2s;
+  }
 
   #chat {
     flex: 1;
@@ -284,7 +312,11 @@
     </div>
     <div id="login-step2" style="display:none">
       <p style="margin-bottom:8px">Enter this code on GitHub:</p>
-      <div class="device-code" id="device-code"></div>
+      <div class="code-row">
+        <div class="device-code" id="device-code"></div>
+        <button class="copy-btn" id="copy-code-btn" onclick="copyDeviceCode()" title="Copy code">📋</button>
+      </div>
+      <div class="copy-toast" id="copy-toast">&nbsp;</div>
       <a id="verify-link" href="#" target="_blank" style="color:#58a6ff;font-size:14px">Open GitHub →</a>
       <div class="login-status" id="login-status">Waiting for authorization...</div>
     </div>
@@ -357,6 +389,37 @@
   checkHealth();
   setInterval(checkHealth, 30000);
 
+  // Copy device code to clipboard
+  async function copyDeviceCode() {
+    const code = document.getElementById('device-code').textContent;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      const btn = document.getElementById('copy-code-btn');
+      const toast = document.getElementById('copy-toast');
+      btn.classList.add('copied');
+      btn.textContent = '✓';
+      toast.textContent = 'Copied to clipboard!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = '📋';
+        toast.innerHTML = '&nbsp;';
+      }, 2000);
+    } catch {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      document.getElementById('copy-toast').textContent = 'Copied to clipboard!';
+      setTimeout(() => { document.getElementById('copy-toast').innerHTML = '&nbsp;'; }, 2000);
+    }
+  }
+
   // Device code login
   async function startLogin() {
     try {
@@ -370,6 +433,9 @@
       document.getElementById('login-step2').style.display = 'block';
       document.getElementById('device-code').textContent = d.user_code;
       document.getElementById('verify-link').href = d.verification_uri;
+      
+      // Auto-copy code to clipboard
+      copyDeviceCode();
       
       // Open GitHub in new tab
       window.open(d.verification_uri, '_blank');
