@@ -419,17 +419,22 @@ def _register_shims():
     
     # Shim: agents.basic_agent → local basic_agent
     try:
+        # Try loading from agents/ subdirectory first, then flat
+        agents_dir = os.path.join(brainstem_dir, "agents")
+        if agents_dir not in sys.path:
+            sys.path.insert(0, agents_dir)
         from basic_agent import BasicAgent as _BA
         if "agents" not in sys.modules:
             agents_mod = types.ModuleType("agents")
-            agents_mod.__path__ = [os.path.join(brainstem_dir, "agents")]
+            agents_mod.__path__ = [agents_dir]
             sys.modules["agents"] = agents_mod
         if "agents.basic_agent" not in sys.modules:
             ba_mod = types.ModuleType("agents.basic_agent")
             ba_mod.BasicAgent = _BA
             sys.modules["agents.basic_agent"] = ba_mod
             sys.modules["agents"].basic_agent = ba_mod
-    except ImportError:
+    except ImportError as e:
+        print(f"[brainstem] Warning: Could not load BasicAgent: {e}")
         pass
     
     # Shim: utils.azure_file_storage → local_storage.py
@@ -448,6 +453,13 @@ def _register_shims():
     ds_mod = types.ModuleType("utils.dynamics_storage")
     ds_mod.DynamicsStorageManager = _LSM
     sys.modules["utils.dynamics_storage"] = ds_mod
+    
+    # Shim: utils.storage_factory → returns local storage manager
+    sf_mod = types.ModuleType("utils.storage_factory")
+    sf_mod.get_storage_manager = lambda: _LSM()
+    sys.modules["utils.storage_factory"] = sf_mod
+    if hasattr(sys.modules["utils"], "__path__"):
+        sys.modules["utils"].storage_factory = sf_mod
     
     _shims_registered = True
     print("[brainstem] Local storage shims registered")

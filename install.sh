@@ -272,12 +272,12 @@ WRAPPER
 
     add_to_path() {
         local file="$1"
-        if [ -f "$file" ]; then
-            if ! grep -q '\.local/bin' "$file" 2>/dev/null; then
-                echo '' >> "$file"
-                echo '# RAPP Brainstem' >> "$file"
-                echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$file"
-            fi
+        # Create shell config if it doesn't exist (common on fresh macOS)
+        touch "$file"
+        if ! grep -q '\.local/bin' "$file" 2>/dev/null; then
+            echo '' >> "$file"
+            echo '# RAPP Brainstem' >> "$file"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$file"
         fi
     }
     add_to_path "$HOME/.bashrc"
@@ -464,7 +464,9 @@ main() {
     if [ -d "$BRAINSTEM_HOME/src/.git" ]; then
         echo "Checking for updates..."
         if ! check_for_upgrade; then
-            # Already up to date — just launch
+            # Already up to date — but ensure CLI wrapper and PATH are set
+            install_cli
+            export PATH="$BRAINSTEM_BIN:/opt/homebrew/bin:/usr/local/bin:$PATH"
             launch_brainstem
         fi
     fi
