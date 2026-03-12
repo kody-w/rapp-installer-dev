@@ -307,25 +307,82 @@ launch_brainstem() {
         ensure_brew_on_path
     fi
 
-    # Step 1: GitHub authentication
-    if command -v gh &> /dev/null; then
-        if gh auth status &> /dev/null; then
-            echo -e "  ${GREEN}✓${NC} Already authenticated with GitHub"
-        else
-            echo -e "  ${CYAN}Authenticating with GitHub...${NC}"
-            echo "  A browser window will open — follow the prompts to sign in."
-            echo ""
-            gh auth login --web -h github.com -p https < /dev/tty
-            if gh auth status &> /dev/null; then
-                echo ""
-                echo -e "  ${GREEN}✓${NC} GitHub authentication complete"
-            else
-                echo ""
-                echo -e "  ${YELLOW}!${NC} Auth skipped — run ${CYAN}gh auth login${NC} later"
-            fi
-        fi
+    local token_file="$BRAINSTEM_HOME/src/rapp_brainstem/.copilot_token"
+    local client_id="Iv1.b507a08c87ecfe98"
+
+    # Step 1: Copilot authentication (device code flow)
+    if [ -f "$token_file" ]; then
+        echo -e "  ${GREEN}✓${NC} Already authenticated with GitHub Copilot"
     else
-        echo -e "  ${YELLOW}!${NC} GitHub CLI not available — run ${CYAN}gh auth login${NC} after installing it"
+        echo ""
+        echo -e "  ${CYAN}Authenticating with GitHub Copilot...${NC}"
+        echo ""
+
+        # Request device code
+        local device_resp
+        device_resp=$(curl -fsSL -X POST "https://github.com/login/device/code" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=${client_id}&scope=read:user" 2>/dev/null)
+
+        local user_code device_code interval verify_uri
+        user_code=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin)['user_code'])" 2>/dev/null)
+        device_code=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin)['device_code'])" 2>/dev/null)
+        interval=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin).get('interval',5))" 2>/dev/null)
+        verify_uri=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin)['verification_uri'])" 2>/dev/null)
+
+        if [[ -z "$user_code" || -z "$device_code" ]]; then
+            echo -e "  ${YELLOW}!${NC} Could not start auth — you can sign in at http://localhost:7071/login"
+        else
+            echo "  ┌─────────────────────────────────────────┐"
+            echo -e "  │  Your code: ${CYAN}${user_code}${NC}                  │"
+            echo "  └─────────────────────────────────────────┘"
+            echo ""
+            echo "  Opening browser to authorize..."
+
+            # Open browser
+            open "$verify_uri" 2>/dev/null || xdg-open "$verify_uri" 2>/dev/null || true
+
+            echo "  Waiting for authorization..."
+            echo ""
+
+            local token_json=""
+            for i in $(seq 1 60); do
+                sleep "${interval:-5}"
+                local poll_resp
+                poll_resp=$(curl -fsSL -X POST "https://github.com/login/oauth/access_token" \
+                    -H "Accept: application/json" \
+                    -H "Content-Type: application/x-www-form-urlencoded" \
+                    -d "client_id=${client_id}&device_code=${device_code}&grant_type=urn:ietf:params:oauth:grant-type:device_code" 2>/dev/null)
+
+                local access_token error
+                access_token=$(echo "$poll_resp" | "$PYTHON_CMD" -c "import sys,json; d=json.load(sys.stdin); print(d.get('access_token',''))" 2>/dev/null)
+                error=$(echo "$poll_resp" | "$PYTHON_CMD" -c "import sys,json; d=json.load(sys.stdin); print(d.get('error',''))" 2>/dev/null)
+
+                if [[ -n "$access_token" ]]; then
+                    # Save token file (same format brainstem.py expects)
+                    "$PYTHON_CMD" -c "
+import sys, json
+d = json.loads(sys.argv[1])
+out = {'access_token': d['access_token']}
+if d.get('refresh_token'): out['refresh_token'] = d['refresh_token']
+with open(sys.argv[2], 'w') as f: json.dump(out, f)
+" "$poll_resp" "$token_file"
+                    echo -e "  ${GREEN}✓${NC} Authenticated with GitHub Copilot"
+                    break
+                fi
+
+                if [[ "$error" == "expired_token" ]]; then
+                    echo -e "  ${YELLOW}!${NC} Auth timed out — sign in at http://localhost:7071/login"
+                    break
+                fi
+
+                if [[ "$error" != "authorization_pending" && "$error" != "slow_down" && -n "$error" ]]; then
+                    echo -e "  ${YELLOW}!${NC} Auth error: $error — sign in at http://localhost:7071/login"
+                    break
+                fi
+            done
+        fi
     fi
 
     # Step 2: Launch brainstem
