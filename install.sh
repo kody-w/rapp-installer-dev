@@ -308,7 +308,7 @@ launch_brainstem() {
     fi
 
     local token_file="$BRAINSTEM_HOME/src/rapp_brainstem/.copilot_token"
-    local client_id="Iv1.b507a08c87ecfe98"
+    local client_id="Ov23ctDVkRmgkPke0Mmm"
 
     # Step 1: Copilot authentication (device code flow)
     local needs_auth=true
@@ -348,7 +348,7 @@ launch_brainstem() {
         device_resp=$(curl -fsSL -X POST "https://github.com/login/device/code" \
             -H "Accept: application/json" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "client_id=${client_id}&scope=read:user" 2>/dev/null)
+            -d "client_id=${client_id}&scope=read:user,read:org,repo,gist" 2>/dev/null)
 
         local user_code device_code interval verify_uri
         user_code=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin)['user_code'])" 2>/dev/null)

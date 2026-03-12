@@ -57,7 +57,7 @@ AVAILABLE_MODELS = [
 # ── GitHub token ──────────────────────────────────────────────────────────────
 
 # GitHub Copilot VS Code extension client ID (same as openrappter)
-COPILOT_CLIENT_ID = "Iv1.b507a08c87ecfe98"
+COPILOT_CLIENT_ID = "Ov23ctDVkRmgkPke0Mmm"
 _token_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".copilot_token")
 _copilot_cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".copilot_session")
 
@@ -275,7 +275,7 @@ def start_device_code_login():
     resp = requests.post(
         "https://github.com/login/device/code",
         headers={"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
-        data=f"client_id={COPILOT_CLIENT_ID}&scope=read:user",
+        data=f"client_id={COPILOT_CLIENT_ID}&scope=read:user,read:org,repo,gist",
         timeout=10,
     )
     resp.raise_for_status()
