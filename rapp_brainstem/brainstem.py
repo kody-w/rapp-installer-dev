@@ -842,7 +842,8 @@ def health():
             "voice_mode": VOICE_MODE,
             "soul":   SOUL_PATH if soul_ok else "missing",
             "agents": list(agents.keys()),
-            "copilot": "✓" if copilot_ok else "pending",
+            "copilot": "\u2713" if copilot_ok else "pending",
+            "brainstem_dir": os.path.dirname(os.path.abspath(__file__)),
         })
     else:
         return jsonify({
