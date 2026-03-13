@@ -172,32 +172,28 @@ function Install-Brainstem {
     Write-Host "  [OK] Source code ready" -ForegroundColor Green
 }
 
-function Install-PipDeps {
-    # Install pip deps, ignoring PATH warnings that PowerShell treats as errors
-    $prevEAP = $ErrorActionPreference
-    $ErrorActionPreference = "SilentlyContinue"
-    $result = & python -m pip install -r requirements.txt 2>&1
-    $ErrorActionPreference = $prevEAP
-    # Check if it actually worked
-    $prevEAP2 = $ErrorActionPreference
-    $ErrorActionPreference = "SilentlyContinue"
-    & python -c "import flask, flask_cors, requests, dotenv" 2>&1 | Out-Null
-    $ok = $LASTEXITCODE -eq 0
-    $ErrorActionPreference = $prevEAP2
-    return $ok
+function Run-PipInstall {
+    # Use Start-Process to completely bypass PowerShell's error handling for native commands
+    $reqFile = "$BRAINSTEM_HOME\src\rapp_brainstem\requirements.txt"
+    $proc = Start-Process -FilePath "python" -ArgumentList "-m", "pip", "install", "-r", $reqFile -NoNewWindow -Wait -PassThru
+    if ($proc.ExitCode -ne 0) {
+        # Retry with --user
+        Start-Process -FilePath "python" -ArgumentList "-m", "pip", "install", "-r", $reqFile, "--user" -NoNewWindow -Wait -PassThru | Out-Null
+    }
+}
+
+function Check-PythonDeps {
+    $proc = Start-Process -FilePath "python" -ArgumentList "-c", "import flask, flask_cors, requests, dotenv" -NoNewWindow -Wait -PassThru
+    return $proc.ExitCode -eq 0
 }
 
 function Setup-Dependencies {
     Write-Host ""
     Write-Host "Installing dependencies..."
     Push-Location "$BRAINSTEM_HOME\src\rapp_brainstem"
-    $ok = Install-PipDeps
-    if (-not $ok) {
-        Write-Host "  [..] Retrying with --user flag..." -ForegroundColor Yellow
-        $prevEAP = $ErrorActionPreference
-        $ErrorActionPreference = "SilentlyContinue"
-        & python -m pip install -r requirements.txt --user 2>&1 | Out-Null
-        $ErrorActionPreference = $prevEAP
+    Run-PipInstall
+    if (-not (Check-PythonDeps)) {
+        Write-Host "  [!] Some dependencies may not have installed correctly" -ForegroundColor Yellow
     }
     Pop-Location
     Write-Host "  [OK] Dependencies installed" -ForegroundColor Green
@@ -378,18 +374,9 @@ function Launch-Brainstem {
     Push-Location "$BRAINSTEM_HOME\src\rapp_brainstem"
 
     # Ensure deps are installed (handles first-run failure or stale install)
-    $prevEAP = $ErrorActionPreference
-    $ErrorActionPreference = "SilentlyContinue"
-    & python -c "import flask, flask_cors, requests, dotenv" 2>&1 | Out-Null
-    $depsOk = $LASTEXITCODE -eq 0
-    $ErrorActionPreference = $prevEAP
-    if (-not $depsOk) {
+    if (-not (Check-PythonDeps)) {
         Write-Host "  [..] Installing missing dependencies..." -ForegroundColor Yellow
-        $prevEAP2 = $ErrorActionPreference
-        $ErrorActionPreference = "SilentlyContinue"
-        & python -m pip install -r requirements.txt 2>&1 | Out-Null
-        & python -m pip install -r requirements.txt --user 2>&1 | Out-Null
-        $ErrorActionPreference = $prevEAP2
+        Run-PipInstall
     }
 
     # Open browser after a delay
