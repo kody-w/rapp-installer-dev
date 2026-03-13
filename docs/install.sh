@@ -6,6 +6,7 @@ set -e
 
 BRAINSTEM_HOME="$HOME/.brainstem"
 BRAINSTEM_BIN="$HOME/.local/bin"
+VENV_DIR="$BRAINSTEM_HOME/venv"
 REPO_URL="https://github.com/kody-w/rapp-installer.git"
 REMOTE_VERSION_URL="https://raw.githubusercontent.com/kody-w/rapp-installer/main/rapp_brainstem/VERSION"
 
@@ -248,12 +249,66 @@ install_brainstem() {
     echo -e "  ${GREEN}✓${NC} Source code ready"
 }
 
+setup_venv() {
+    local venv_python="$VENV_DIR/bin/python"
+
+    # Check if venv exists and is healthy
+    if [ -x "$venv_python" ]; then
+        if "$venv_python" -c "import sys; sys.exit(0)" 2>/dev/null; then
+            echo -e "  ${GREEN}✓${NC} Virtual environment OK"
+            return 0
+        fi
+        echo -e "  ${YELLOW}⚠${NC} Virtual environment broken — recreating..."
+        rm -rf "$VENV_DIR"
+    fi
+
+    echo "  Creating virtual environment..."
+    "$PYTHON_CMD" -m venv "$VENV_DIR" 2>/dev/null || {
+        # Some systems need ensurepip first
+        "$PYTHON_CMD" -m ensurepip 2>/dev/null || true
+        "$PYTHON_CMD" -m venv "$VENV_DIR" || {
+            echo -e "  ${RED}✗${NC} Failed to create virtual environment"
+            echo "    Try: $PYTHON_CMD -m pip install virtualenv"
+            exit 1
+        }
+    }
+    # Ensure pip is up to date inside the venv
+    "$VENV_DIR/bin/python" -m pip install --upgrade pip --quiet 2>/dev/null || true
+    echo -e "  ${GREEN}✓${NC} Virtual environment ready"
+}
+
 setup_deps() {
     echo ""
     echo "Installing dependencies..."
-    cd "$BRAINSTEM_HOME/src/rapp_brainstem"
-    "$PYTHON_CMD" -m pip install -r requirements.txt --quiet 2>/dev/null || \
-        "$PYTHON_CMD" -m pip install -r requirements.txt
+    local req_file="$BRAINSTEM_HOME/src/rapp_brainstem/requirements.txt"
+    "$VENV_DIR/bin/pip" install -r "$req_file" --quiet 2>/dev/null || \
+        "$VENV_DIR/bin/pip" install -r "$req_file"
+
+    # Verify the critical imports actually work
+    if ! "$VENV_DIR/bin/python" -c "import flask, requests, dotenv" 2>/dev/null; then
+        echo -e "  ${RED}✗${NC} Dependencies failed to install"
+        echo "    Try: $VENV_DIR/bin/pip install -r $req_file"
+        exit 1
+    fi
+    echo -e "  ${GREEN}✓${NC} Dependencies installed"
+}
+
+ensure_deps() {
+    # Quick import check — only install if something is missing
+    if "$VENV_DIR/bin/python" -c "import flask, requests, dotenv" 2>/dev/null; then
+        echo -e "  ${GREEN}✓${NC} Dependencies verified"
+        return 0
+    fi
+
+    echo -e "  ${YELLOW}⚠${NC} Missing dependencies — installing..."
+    local req_file="$BRAINSTEM_HOME/src/rapp_brainstem/requirements.txt"
+    "$VENV_DIR/bin/pip" install -r "$req_file" --quiet 2>/dev/null || \
+        "$VENV_DIR/bin/pip" install -r "$req_file"
+
+    if ! "$VENV_DIR/bin/python" -c "import flask, requests, dotenv" 2>/dev/null; then
+        echo -e "  ${RED}✗${NC} Dependencies failed — try: $VENV_DIR/bin/pip install -r $req_file"
+        exit 1
+    fi
     echo -e "  ${GREEN}✓${NC} Dependencies installed"
 }
 
@@ -262,22 +317,40 @@ install_cli() {
     echo "Installing CLI..."
     mkdir -p "$BRAINSTEM_BIN"
 
-    cat > "$BRAINSTEM_BIN/brainstem" << WRAPPER
+    cat > "$BRAINSTEM_BIN/brainstem" << 'WRAPPER'
 #!/bin/bash
+BRAINSTEM_HOME="$HOME/.brainstem"
+VENV_PYTHON="$BRAINSTEM_HOME/venv/bin/python"
 cd "$BRAINSTEM_HOME/src/rapp_brainstem"
-exec $PYTHON_CMD brainstem.py "\$@"
+
+# Use venv Python; fall back to creating venv if missing
+if [ ! -x "$VENV_PYTHON" ]; then
+    echo "  Setting up environment..."
+    PYTHON_CMD=$(command -v python3.11 || command -v python3.12 || command -v python3.13 || command -v python3)
+    "$PYTHON_CMD" -m venv "$BRAINSTEM_HOME/venv" 2>/dev/null
+    "$BRAINSTEM_HOME/venv/bin/pip" install -r requirements.txt --quiet 2>/dev/null || \
+        "$BRAINSTEM_HOME/venv/bin/pip" install -r requirements.txt
+    VENV_PYTHON="$BRAINSTEM_HOME/venv/bin/python"
+fi
+
+# Verify deps on every launch (fast no-op if already installed)
+if ! "$VENV_PYTHON" -c "import flask, requests, dotenv" 2>/dev/null; then
+    "$BRAINSTEM_HOME/venv/bin/pip" install -r requirements.txt --quiet 2>/dev/null || true
+fi
+
+exec "$VENV_PYTHON" brainstem.py "$@"
 WRAPPER
 
     chmod +x "$BRAINSTEM_BIN/brainstem"
 
     add_to_path() {
         local file="$1"
-        if [ -f "$file" ]; then
-            if ! grep -q '\.local/bin' "$file" 2>/dev/null; then
-                echo '' >> "$file"
-                echo '# RAPP Brainstem' >> "$file"
-                echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$file"
-            fi
+        # Create shell config if it doesn't exist (common on fresh macOS)
+        touch "$file"
+        if ! grep -q '\.local/bin' "$file" 2>/dev/null; then
+            echo '' >> "$file"
+            echo '# RAPP Brainstem' >> "$file"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$file"
         fi
     }
     add_to_path "$HOME/.bashrc"
@@ -297,14 +370,18 @@ create_env() {
 launch_brainstem() {
     export PATH="$BRAINSTEM_BIN:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-    # Find Python for this session
-    if [[ -z "$PYTHON_CMD" ]]; then
-        PYTHON_CMD=$(find_python) || true
-    fi
+    local venv_python="$VENV_DIR/bin/python"
 
-    # Ensure Homebrew tools are visible
-    if [[ "$(detect_os)" == "macos" ]]; then
-        ensure_brew_on_path
+    # Ensure venv exists (handles edge case where only launch is called)
+    if [ ! -x "$venv_python" ]; then
+        if [[ -z "$PYTHON_CMD" ]]; then
+            PYTHON_CMD=$(find_python) || true
+        fi
+        if [[ "$(detect_os)" == "macos" ]]; then
+            ensure_brew_on_path
+        fi
+        setup_venv
+        ensure_deps
     fi
 
     local token_file="$BRAINSTEM_HOME/src/rapp_brainstem/.copilot_token"
@@ -315,7 +392,7 @@ launch_brainstem() {
     if [ -f "$token_file" ]; then
         # Validate existing token against Copilot API
         local saved_token
-        saved_token=$("$PYTHON_CMD" -c "
+        saved_token=$("$venv_python" -c "
 import json, sys
 try:
     with open('$token_file') as f:
@@ -361,10 +438,10 @@ except: pass
             -d "client_id=${client_id}" 2>/dev/null)
 
         local user_code device_code interval verify_uri
-        user_code=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin)['user_code'])" 2>/dev/null)
-        device_code=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin)['device_code'])" 2>/dev/null)
-        interval=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin).get('interval',5))" 2>/dev/null)
-        verify_uri=$(echo "$device_resp" | "$PYTHON_CMD" -c "import sys,json; print(json.load(sys.stdin)['verification_uri'])" 2>/dev/null)
+        user_code=$(echo "$device_resp" | "$venv_python" -c "import sys,json; print(json.load(sys.stdin)['user_code'])" 2>/dev/null)
+        device_code=$(echo "$device_resp" | "$venv_python" -c "import sys,json; print(json.load(sys.stdin)['device_code'])" 2>/dev/null)
+        interval=$(echo "$device_resp" | "$venv_python" -c "import sys,json; print(json.load(sys.stdin).get('interval',5))" 2>/dev/null)
+        verify_uri=$(echo "$device_resp" | "$venv_python" -c "import sys,json; print(json.load(sys.stdin)['verification_uri'])" 2>/dev/null)
 
         if [[ -z "$user_code" || -z "$device_code" ]]; then
             echo -e "  ${YELLOW}!${NC} Could not start auth — you can sign in at http://localhost:7071/login"
@@ -391,12 +468,12 @@ except: pass
                     -d "client_id=${client_id}&device_code=${device_code}&grant_type=urn:ietf:params:oauth:grant-type:device_code" 2>/dev/null)
 
                 local access_token error
-                access_token=$(echo "$poll_resp" | "$PYTHON_CMD" -c "import sys,json; d=json.load(sys.stdin); print(d.get('access_token',''))" 2>/dev/null)
-                error=$(echo "$poll_resp" | "$PYTHON_CMD" -c "import sys,json; d=json.load(sys.stdin); print(d.get('error',''))" 2>/dev/null)
+                access_token=$(echo "$poll_resp" | "$venv_python" -c "import sys,json; d=json.load(sys.stdin); print(d.get('access_token',''))" 2>/dev/null)
+                error=$(echo "$poll_resp" | "$venv_python" -c "import sys,json; d=json.load(sys.stdin); print(d.get('error',''))" 2>/dev/null)
 
                 if [[ -n "$access_token" ]]; then
                     # Save token file (same format brainstem.py expects)
-                    "$PYTHON_CMD" -c "
+                    "$venv_python" -c "
 import sys, json
 d = json.loads(sys.argv[1])
 out = {'access_token': d['access_token']}
@@ -452,9 +529,22 @@ with open(sys.argv[2], 'w') as f: json.dump(out, f)
     cd "$BRAINSTEM_HOME/src/rapp_brainstem"
 
     # Open the browser after a short delay
-    (sleep 3 && open "http://localhost:7071" 2>/dev/null || xdg-open "http://localhost:7071" 2>/dev/null) &
+    (sleep 3 && (open "http://localhost:7071" 2>/dev/null || xdg-open "http://localhost:7071" 2>/dev/null)) &
 
-    exec "$PYTHON_CMD" brainstem.py
+    # Final dep safety net — if somehow we got here without deps, fix it
+    if ! "$venv_python" -c "import flask, requests, dotenv" 2>/dev/null; then
+        echo -e "  ${YELLOW}⚠${NC} Fixing missing dependencies..."
+        "$VENV_DIR/bin/pip" install -r "$BRAINSTEM_HOME/src/rapp_brainstem/requirements.txt" --quiet 2>/dev/null || \
+            "$VENV_DIR/bin/pip" install -r "$BRAINSTEM_HOME/src/rapp_brainstem/requirements.txt"
+    fi
+
+    # Use exec to replace shell — but only if stdin is a terminal.
+    # When piped (curl | bash), exec can lose the TTY and hang.
+    if [ -t 0 ]; then
+        exec "$venv_python" brainstem.py
+    else
+        "$venv_python" brainstem.py </dev/tty
+    fi
 }
 
 main() {
@@ -464,13 +554,22 @@ main() {
     if [ -d "$BRAINSTEM_HOME/src/.git" ]; then
         echo "Checking for updates..."
         if ! check_for_upgrade; then
-            # Already up to date — just launch
+            # Already up to date — still verify everything works before launching
+            check_prereqs
+            setup_venv
+            ensure_deps
+            install_cli
+            create_env
+            export PATH="$BRAINSTEM_BIN:/opt/homebrew/bin:/usr/local/bin:$PATH"
             launch_brainstem
+            exit $?  # launch uses exec, but guard against fall-through
         fi
+        # Upgrade available — fall through to full install path
     fi
 
     check_prereqs
     install_brainstem
+    setup_venv
     setup_deps
     install_cli
     create_env
