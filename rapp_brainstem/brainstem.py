@@ -56,7 +56,7 @@ AVAILABLE_MODELS = [
 ]
 
 # Models that don't support OpenAI-style tool_choice parameter
-_NO_TOOL_CHOICE_MODELS = {"claude-sonnet-4", "claude-"}
+_NO_TOOL_CHOICE_MODELS = set()
 _models_fetched = False
 
 def _fetch_copilot_models():
@@ -86,7 +86,7 @@ def _fetch_copilot_models():
                     mname = m.get("name", mid)
                     if mid:
                         new_models.append({"id": mid, "name": mname})
-                        if "claude" in mid.lower() or "o1" in mid.lower():
+                        if "o1" in mid.lower():
                             _NO_TOOL_CHOICE_MODELS.add(mid)
                 if new_models:
                     AVAILABLE_MODELS = new_models
@@ -597,7 +597,27 @@ def call_copilot(messages, tools=None):
                 body["tool_choice"] = "auto"
             resp = requests.post(url, headers=headers, json=body, timeout=60)
     resp.raise_for_status()
-    return resp.json()
+    result = resp.json()
+
+    # ── Normalize multi-choice responses ──────────────────────────────────────
+    # Some models (e.g. Claude via Copilot API) split text and tool_calls into
+    # separate choices.  Merge them into a single choice so the rest of the
+    # codebase can treat the response uniformly.
+    choices = result.get("choices", [])
+    if len(choices) > 1:
+        merged = {"role": "assistant", "content": None, "tool_calls": []}
+        for c in choices:
+            m = c.get("message", {})
+            if m.get("content"):
+                merged["content"] = (merged["content"] or "") + m["content"]
+            if m.get("tool_calls"):
+                merged["tool_calls"].extend(m["tool_calls"])
+        if not merged["tool_calls"]:
+            del merged["tool_calls"]
+        fr = "tool_calls" if merged.get("tool_calls") else choices[0].get("finish_reason", "stop")
+        result["choices"] = [{"message": merged, "finish_reason": fr}]
+
+    return result
 
 # ── Agent execution ───────────────────────────────────────────────────────────
 
