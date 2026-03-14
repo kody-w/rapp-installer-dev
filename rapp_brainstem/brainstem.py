@@ -630,7 +630,6 @@ def call_copilot(messages, tools=None):
                 merged["tool_calls"].extend(m["tool_calls"])
         if not merged["tool_calls"]:
             del merged["tool_calls"]
-        # Prefer the finish_reason that indicates tool_calls if present
         fr = "tool_calls" if merged.get("tool_calls") else choices[0].get("finish_reason", "stop")
         result["choices"] = [{"message": merged, "finish_reason": fr}]
 
