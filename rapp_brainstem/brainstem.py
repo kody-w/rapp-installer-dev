@@ -40,6 +40,7 @@ AGENTS_PATH = os.getenv("AGENTS_PATH", os.path.join(os.path.dirname(__file__), "
 MODEL       = os.getenv("GITHUB_MODEL", "gpt-4o")
 PORT        = int(os.getenv("PORT", 7071))
 VOICE_MODE  = os.getenv("VOICE_MODE", "false").lower() == "true"
+VOICE_ZIP_PW = os.getenv("VOICE_ZIP_PASSWORD", "").encode() or None
 
 _version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "VERSION")
 VERSION = open(_version_file).read().strip() if os.path.exists(_version_file) else "0.0.0"
@@ -795,6 +796,106 @@ def set_model():
 def voice_status():
     """Get voice mode status."""
     return jsonify({"voice_mode": VOICE_MODE})
+
+@app.route("/voice/config", methods=["GET"])
+def voice_config():
+    """Serve voice config from password-protected voice.zip."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    voice_zip = os.path.join(base_dir, "voice.zip")
+    password = request.args.get("password", "").encode() or VOICE_ZIP_PW
+    if os.path.exists(voice_zip):
+        try:
+            import pyzipper
+            with pyzipper.AESZipFile(voice_zip, 'r') as zf:
+                with zf.open("voice.json", pwd=password) as f:
+                    cfg = json.load(f)
+            return jsonify(cfg)
+        except (RuntimeError, Exception) as e:
+            err = str(e).lower()
+            if "password" in err or "bad password" in err or "decrypt" in err:
+                # Fallback: try standard zipfile (for unencrypted legacy zips)
+                try:
+                    import zipfile
+                    with zipfile.ZipFile(voice_zip, 'r') as zf:
+                        with zf.open("voice.json") as f:
+                            cfg = json.load(f)
+                    return jsonify(cfg)
+                except Exception:
+                    return jsonify({"error": "voice.zip password incorrect"}), 403
+            return jsonify({"error": str(e)}), 500
+    return jsonify({})
+
+@app.route("/voice/config", methods=["POST"])
+def voice_config_save():
+    """Save voice config to AES-encrypted voice.zip for local persistence."""
+    data = request.get_json(force=True) or {}
+    password = data.pop("_password", None)
+    if not password:
+        return jsonify({"error": "Password required to export voice.zip"}), 400
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    voice_zip = os.path.join(base_dir, "voice.zip")
+    try:
+        import pyzipper
+        with pyzipper.AESZipFile(voice_zip, 'w',
+                                 compression=pyzipper.ZIP_DEFLATED,
+                                 encryption=pyzipper.WZ_AES) as zf:
+            zf.setpassword(password.encode())
+            zf.writestr("voice.json", json.dumps(data, indent=2))
+        return jsonify({"status": "ok", "message": "voice.zip saved (AES encrypted)"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/voice/export", methods=["POST"])
+def voice_export():
+    """Generate and return a password-protected voice.zip for download."""
+    data = request.get_json(force=True) or {}
+    password = data.pop("_password", None)
+    if not password:
+        return jsonify({"error": "Password required"}), 400
+    try:
+        import pyzipper
+        import io
+        buf = io.BytesIO()
+        with pyzipper.AESZipFile(buf, 'w',
+                                 compression=pyzipper.ZIP_DEFLATED,
+                                 encryption=pyzipper.WZ_AES) as zf:
+            zf.setpassword(password.encode())
+            zf.writestr("voice.json", json.dumps(data, indent=2))
+        buf.seek(0)
+        from flask import send_file
+        return send_file(buf, mimetype='application/zip',
+                         as_attachment=True, download_name='voice.zip')
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/voice/import", methods=["POST"])
+def voice_import():
+    """Import a password-protected voice.zip and return its config."""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    password = request.form.get("password", "").encode()
+    if not password:
+        return jsonify({"error": "Password required"}), 400
+    f = request.files['file']
+    try:
+        import pyzipper
+        import io
+        buf = io.BytesIO(f.read())
+        with pyzipper.AESZipFile(buf, 'r') as zf:
+            with zf.open("voice.json", pwd=password) as jf:
+                cfg = json.load(jf)
+        # Also save to local voice.zip
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        voice_zip = os.path.join(base_dir, "voice.zip")
+        buf.seek(0)
+        with open(voice_zip, 'wb') as out:
+            out.write(buf.read())
+        return jsonify(cfg)
+    except (RuntimeError, Exception) as e:
+        err = str(e).lower()
+        if "password" in err or "decrypt" in err:
+            return jsonify({"error": "Wrong password"}), 403
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/voice/toggle", methods=["POST"])
 def voice_toggle():

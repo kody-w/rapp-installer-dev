@@ -10,3 +10,4 @@ __pycache__/
 # Remote agents (downloaded at runtime)
 .remote_agents/
 .repos.json
+voice.zip

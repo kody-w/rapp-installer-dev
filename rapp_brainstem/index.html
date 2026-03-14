@@ -438,6 +438,11 @@
           <button class="panel-btn" onclick="testVoice()">Test</button>
           <button class="panel-btn" onclick="clearVoiceSettings()">Clear Key</button>
         </div>
+        <div class="panel-row" style="margin-top:6px">
+          <button class="panel-btn" onclick="exportVoiceConfig()">Export</button>
+          <button class="panel-btn" onclick="document.getElementById('voice-import').click()">Import</button>
+          <input type="file" id="voice-import" accept=".zip,.json" style="display:none" onchange="importVoiceConfig(event)">
+        </div>
         <div class="panel-status" id="voice-panel-status"></div>
       </div>
     </div>
@@ -839,6 +844,50 @@
   if (azSpeechKey) loadAzureVoices();
   if (elApiKey) loadElevenLabsVoices();
 
+  // Auto-load config from server-side voice.zip (seeds UI if no localStorage yet)
+  fetch(`${API}/voice/config`).then(r => r.json()).then(cfg => {
+    if (cfg.error) return;
+    let changed = false;
+    if (cfg.provider && !localStorage.getItem('voice_provider')) {
+      voiceProvider = cfg.provider;
+      document.getElementById('voice-provider').value = cfg.provider;
+      localStorage.setItem('voice_provider', cfg.provider);
+      changed = true;
+    }
+    if (cfg.azure_speech_key && !azSpeechKey) {
+      azSpeechKey = cfg.azure_speech_key;
+      document.getElementById('az-speech-key').value = cfg.azure_speech_key;
+      localStorage.setItem('az_speech_key', cfg.azure_speech_key);
+      changed = true;
+    }
+    if (cfg.azure_speech_region && !localStorage.getItem('az_speech_region')) {
+      azSpeechRegion = cfg.azure_speech_region;
+      document.getElementById('az-speech-region').value = cfg.azure_speech_region;
+      localStorage.setItem('az_speech_region', cfg.azure_speech_region);
+    }
+    if (cfg.azure_voice_name && !localStorage.getItem('az_voice_name')) {
+      azVoiceName = cfg.azure_voice_name;
+      localStorage.setItem('az_voice_name', cfg.azure_voice_name);
+    }
+    if (cfg.api_key && !elApiKey) {
+      elApiKey = cfg.api_key;
+      document.getElementById('el-api-key').value = cfg.api_key;
+      localStorage.setItem('el_api_key', cfg.api_key);
+    }
+    if (cfg.voice_id && !elVoiceId) {
+      elVoiceId = cfg.voice_id;
+      localStorage.setItem('el_voice_id', cfg.voice_id);
+    }
+    if (cfg.model && cfg.model !== 'eleven_multilingual_v2') {
+      elModel = cfg.model;
+      document.getElementById('el-model-select').value = cfg.model;
+      localStorage.setItem('el_model', cfg.model);
+    }
+    switchVoiceProvider();
+    if (azSpeechKey) loadAzureVoices();
+    if (elApiKey) loadElevenLabsVoices();
+  }).catch(() => {});
+
   document.getElementById('az-speech-key').addEventListener('change', () => {
     const key = document.getElementById('az-speech-key').value.trim();
     if (key) { azSpeechKey = key; loadAzureVoices(); }
@@ -1123,6 +1172,119 @@
     const utter = new SpeechSynthesisUtterance(clean.slice(0, 300));
     utter.rate = 1.05; utter.pitch = 1.0;
     window.speechSynthesis.speak(utter);
+  }
+
+  // ── Voice export/import ──
+  function _gatherVoiceConfig() {
+    return {
+      provider: voiceProvider,
+      azure_speech_key: azSpeechKey,
+      azure_speech_region: azSpeechRegion,
+      azure_voice_name: azVoiceName,
+      api_key: elApiKey,
+      voice_id: elVoiceId,
+      model: elModel
+    };
+  }
+
+  function _applyVoiceConfig(cfg) {
+    if (cfg.provider) {
+      voiceProvider = cfg.provider;
+      document.getElementById('voice-provider').value = cfg.provider;
+      localStorage.setItem('voice_provider', cfg.provider);
+    }
+    if (cfg.azure_speech_key) {
+      azSpeechKey = cfg.azure_speech_key;
+      document.getElementById('az-speech-key').value = cfg.azure_speech_key;
+      localStorage.setItem('az_speech_key', cfg.azure_speech_key);
+    }
+    if (cfg.azure_speech_region) {
+      azSpeechRegion = cfg.azure_speech_region;
+      document.getElementById('az-speech-region').value = cfg.azure_speech_region;
+      localStorage.setItem('az_speech_region', cfg.azure_speech_region);
+    }
+    if (cfg.azure_voice_name) {
+      azVoiceName = cfg.azure_voice_name;
+      localStorage.setItem('az_voice_name', cfg.azure_voice_name);
+    }
+    if (cfg.api_key) {
+      elApiKey = cfg.api_key;
+      document.getElementById('el-api-key').value = cfg.api_key;
+      localStorage.setItem('el_api_key', cfg.api_key);
+    }
+    if (cfg.voice_id) {
+      elVoiceId = cfg.voice_id;
+      localStorage.setItem('el_voice_id', cfg.voice_id);
+    }
+    if (cfg.model) {
+      elModel = cfg.model;
+      document.getElementById('el-model-select').value = cfg.model;
+      localStorage.setItem('el_model', cfg.model);
+    }
+    switchVoiceProvider();
+    if (azSpeechKey) loadAzureVoices();
+    if (elApiKey) loadElevenLabsVoices();
+  }
+
+  async function exportVoiceConfig() {
+    const pw = prompt('Set a password for voice.zip:');
+    if (!pw) return;
+    const status = document.getElementById('voice-panel-status');
+    status.textContent = 'Exporting...';
+    status.style.color = '#d29922';
+    try {
+      const cfg = _gatherVoiceConfig();
+      cfg._password = pw;
+      const r = await fetch(`${API}/voice/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfg)
+      });
+      if (!r.ok) {
+        const d = await r.json();
+        throw new Error(d.error || `HTTP ${r.status}`);
+      }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'voice.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+      status.textContent = 'Exported voice.zip';
+      status.style.color = '#3fb950';
+    } catch (e) {
+      status.textContent = 'Export failed: ' + e.message;
+      status.style.color = '#f85149';
+    }
+  }
+
+  async function importVoiceConfig(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    event.target.value = '';
+    const pw = prompt('Enter voice.zip password:');
+    if (!pw) return;
+    const status = document.getElementById('voice-panel-status');
+    status.textContent = 'Importing...';
+    status.style.color = '#d29922';
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('password', pw);
+      const r = await fetch(`${API}/voice/import`, {
+        method: 'POST',
+        body: form
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      _applyVoiceConfig(d);
+      status.textContent = 'Imported — voice config loaded';
+      status.style.color = '#3fb950';
+    } catch (e) {
+      status.textContent = 'Import failed: ' + e.message;
+      status.style.color = '#f85149';
+    }
   }
 
   fetch(`${API}/voice`).then(r => r.json()).then(d => {
