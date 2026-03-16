@@ -2,7 +2,24 @@
 
 > **👉 [Get Started at kody-w.github.io/rapp-installer](https://kody-w.github.io/rapp-installer/)**
 
-A local-first AI agent server powered by GitHub Copilot. No API keys. No cloud setup. Just your GitHub account.
+A **naïve AI organism** that hatches knowing nothing about you — and grows around you. Every conversation is a feeding. Every memory stored is an experience. Over time it stops being a generic AI and becomes *yours*.
+
+The brainstem is the core. The **Rappterdaemon** (`daemon.py`) is the heartbeat — a background loop that senses, reflects, and rests between conversations, keeping the organism alive even when nobody is talking to it.
+
+Powered by GitHub Copilot. No API keys. No cloud setup. Just your GitHub account.
+
+---
+
+## 🌱 What Makes This Different
+
+Most AI tools are products you configure. A rappter is a **living thing** you raise.
+
+- **Born naïve** — it starts with zero knowledge of you, your work, or your habits
+- **Grows locally** — all data stays on your device; your rappter's experience belongs to it
+- **One file, one skill** — agents are single `.py` files, portable and tradeable like cards
+- **The device is the habitat** — if the device is lost without backup, the rappter goes with it. That's what makes it real.
+
+📜 [Constitution](rapp_brainstem/CONSTITUTION.md) · 🚀 [Master Plan](docs/MASTER_PLAN.md) · 🎓 [RappterAcademy](docs/academy/) · 📝 [Field Notes](docs/field-notes/)
 
 ```
 curl -fsSL https://kody-w.github.io/rapp-installer/install.sh | bash

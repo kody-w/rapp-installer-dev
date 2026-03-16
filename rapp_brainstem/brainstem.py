@@ -1,16 +1,20 @@
 """
-RAPP Brainstem — minimal local AI agent endpoint.
-Only dependency: a GitHub account with Copilot access.
+RAPP Brainstem — the core of a naïve AI organism (the Rappterdaemon).
 
-Uses the GitHub Copilot API directly (same pattern as openrappter).
+The brainstem keeps the organism alive: LLM inference, agent orchestration,
+tool-calling, and conversation. daemon.py provides the heartbeat — a background
+loop that lets the organism sense, reflect, and rest between conversations.
+
+Only dependency: a GitHub account with Copilot access.
 No API keys needed — just `gh auth login`.
 
 Usage:
     ./start.sh
     # or: python brainstem.py
 
-POST /chat  { user_input, conversation_history?, session_id? }
-GET  /health
+POST /chat    { user_input, conversation_history?, session_id? }
+GET  /health  Status, model, loaded agents, token state
+GET  /vitals  Daemon heartbeat and organism state
 """
 
 import os
