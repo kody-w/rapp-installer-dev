@@ -950,6 +950,44 @@ def version():
     """Return the current brainstem version."""
     return jsonify({"version": VERSION})
 
+# ── /vitals endpoint (daemon state) ──────────────────────────────────────────
+
+@app.route("/vitals", methods=["GET"])
+def vitals():
+    """Return daemon heartbeat state and recent journal entries."""
+    vitals_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".brainstem_data", "vitals.json")
+    journal_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".brainstem_data", "journal.json")
+
+    v = {}
+    if os.path.exists(vitals_path):
+        try:
+            with open(vitals_path) as f:
+                v = json.load(f)
+            # Check freshness — if vitals are older than 3x heartbeat interval, daemon is likely dead
+            updated = v.get("updated_at", "")
+            if updated:
+                from datetime import datetime, timedelta
+                last = datetime.fromisoformat(updated)
+                interval = v.get("heartbeat_interval", 120)
+                if datetime.now() - last > timedelta(seconds=interval * 3):
+                    v["alive"] = False
+                    v["mood"] = "offline"
+        except Exception:
+            pass
+
+    journal = []
+    if os.path.exists(journal_path):
+        try:
+            with open(journal_path) as f:
+                journal = json.load(f)
+        except Exception:
+            pass
+
+    return jsonify({
+        "vitals": v,
+        "journal": journal[-10:],  # last 10 entries
+    })
+
 @app.route("/health", methods=["GET"])
 def health():
     agents = {}
