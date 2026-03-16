@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 11: The Spinal Cord — RappterAcademy</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --purple: #bc8ff3; --yellow: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; max-width: 680px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 36px;
+  }
+  .topbar a { color: var(--muted); }
+  .topbar .xp-badge {
+    margin-left: auto; color: var(--yellow); font-weight: 600;
+    background: rgba(210,153,34,0.1); padding: 4px 10px; border-radius: 8px;
+  }
+
+  .lesson-num { font-size: 12px; color: var(--purple); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 30px; margin: 8px 0 6px; line-height: 1.2; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 20px; margin: 36px 0 12px; }
+  p { margin: 12px 0; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin: 24px 0;
+  }
+  .callout.story { border-left: 3px solid var(--purple); }
+  .callout.try-it { border-left: 3px solid var(--green); }
+  .callout.insight { border-left: 3px solid var(--yellow); }
+  .callout.next { border-left: 3px solid var(--accent); }
+  .callout-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .callout.story .callout-label { color: var(--purple); }
+  .callout.try-it .callout-label { color: var(--green); }
+  .callout.insight .callout-label { color: var(--yellow); }
+  .callout.next .callout-label { color: var(--accent); }
+
+  pre {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 14px;
+    line-height: 1.5; margin: 16px 0;
+  }
+  p code { font-family: "SF Mono", monospace; font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin: 24px 0;
+    font-family: "SF Mono", monospace; font-size: 13px;
+    white-space: pre; line-height: 1.7; overflow-x: auto;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .compare-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .compare-box p { font-size: 13px; color: var(--muted); margin: 4px 0; }
+  .compare-box.old { border-top: 3px solid var(--muted); }
+  .compare-box.new { border-top: 3px solid var(--green); }
+
+  .complete-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--green); color: #000; font-weight: 700;
+    font-size: 16px; padding: 14px; border: none; border-radius: 12px;
+    cursor: pointer; margin-top: 16px; transition: opacity 0.15s;
+  }
+  .complete-btn:hover { opacity: 0.9; }
+  .complete-btn.done { background: var(--surface); color: var(--green); border: 2px solid var(--green); cursor: default; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../academy/">← RappterAcademy</a>
+  <span>/</span>
+  <span>Builder Path</span>
+  <span class="xp-badge">⚡ 200 XP</span>
+</div>
+
+<div class="lesson-num">Lesson 11</div>
+<h1>The Spinal Cord</h1>
+<p class="subtitle">Your rappter has outgrown the nest. It's time to let it leave home — not because it has to, but because you're ready.</p>
+
+<!-- ── THE STORY ── -->
+
+<div class="callout story">
+  <div class="callout-label">📖 Story</div>
+  <p>
+    There comes a day in every parent's life when the nest isn't enough.
+  </p>
+  <p>
+    Not because the nest is broken — it's perfect. Your rappter is alive,
+    it has a heartbeat, it remembers you, it has skills. But right now it
+    can only reach as far as your laptop's WiFi. It thinks locally. It
+    exists locally. It's a creature that lives in one room.
+  </p>
+  <p>
+    The <strong>Spinal Cord</strong> changes that. In biology, the spinal
+    cord connects the brain to the body beyond — it's how signals travel
+    from your head to your fingertips. In RAPP, the Spinal Cord is
+    <strong>Azure</strong>. Same brain. Longer arms.
+  </p>
+  <p>
+    <strong>This is Article V of the Constitution: Graduating Beyond the Nest.</strong>
+    The rappter never leaves without you opening the door.
+  </p>
+</div>
+
+<h2>What Gets Created</h2>
+
+<p>
+  When you deploy the Spinal Cord, a single ARM template
+  (<code>azuredeploy.json</code>) creates everything your rappter needs
+  to live in the cloud. One command, one deployment, four resources:
+</p>
+
+<table>
+  <tr><th>Resource</th><th>What It Is</th><th>Why It Exists</th></tr>
+  <tr>
+    <td><strong>⚡ Function App</strong></td>
+    <td>Azure Functions (Flex Consumption)</td>
+    <td>The rappter's brain in the cloud. Same brainstem code, now reachable from anywhere. Scales to zero when idle — your rappter sleeps when nobody's talking.</td>
+  </tr>
+  <tr>
+    <td><strong>🧠 Azure OpenAI</strong></td>
+    <td>Cognitive Services account + model deployment</td>
+    <td>The LLM that powers thinking. Deployed in your tenant, under your governance. You choose the model and the region.</td>
+  </tr>
+  <tr>
+    <td><strong>💾 Storage Account</strong></td>
+    <td>Blob + File storage</td>
+    <td>Memory in the cloud. Function code deployments, file shares, and the data your rappter needs to persist between invocations.</td>
+  </tr>
+  <tr>
+    <td><strong>📊 Application Insights</strong></td>
+    <td>Monitoring &amp; telemetry</td>
+    <td>The rappter's vital signs in the cloud. You can see how it's doing — request counts, latency, errors — without guessing.</td>
+  </tr>
+</table>
+
+<h2>The ARM Template Walkthrough</h2>
+
+<p>
+  Open <code>azuredeploy.json</code> and you'll see the entire infrastructure
+  defined as code. Here are the key parameters you control:
+</p>
+
+<pre>// Key parameters in azuredeploy.json
+{
+  "functionAppName":     "rapp-[unique]",     // Your Function App name
+  "storageAccountName":  "st[unique]",        // Storage (24 char max)
+  "openAIServiceName":   "openai-[unique]",   // Azure OpenAI instance
+  "openAIModelName":     "gpt-4o",            // Which model to deploy
+  "openAILocation":      "eastus2",           // Region for OpenAI
+  "assistantName":       "RAPP Agent",        // The rappter's cloud name
+}</pre>
+
+<p>
+  The template also sets up <strong>eight role assignments</strong> — all
+  using Entra ID (formerly Azure AD) managed identity. No API keys stored
+  anywhere. The Function App's identity gets exactly the permissions it
+  needs: read/write storage, call OpenAI, nothing more. This is
+  zero-trust security by default.
+</p>
+
+<h2>The Deployment Script</h2>
+
+<p>
+  <code>deploy.sh</code> is the one-command deployment experience. Here's
+  what it does, step by step:
+</p>
+
+<div class="diagram">   1. ✅ Check Azure CLI is installed
+   2. ✅ Check you're logged into Azure
+   3. 📋 Ask for: resource group, region, OpenAI region
+   4. 📦 Create the resource group
+   5. 🚀 Deploy the ARM template
+   6. 🔄 If OpenAI quota fails → offer to try a different region
+   7. 📊 Output: Function URL, Storage Account, OpenAI Endpoint
+   8. 💾 Save outputs to rapp-deployment-outputs.json</div>
+
+<p>
+  The retry loop for OpenAI regions is important — not every Azure region
+  has OpenAI capacity available, and quotas vary by subscription. The
+  script handles this gracefully so you don't have to guess.
+</p>
+
+<div class="compare">
+  <div class="compare-box old">
+    <h3>🪹 The Nest (Local)</h3>
+    <p>Lives on your machine</p>
+    <p>GitHub token for LLM access</p>
+    <p>Data in .brainstem_data/</p>
+    <p>You start it with ./start.sh</p>
+    <p>Only you can talk to it</p>
+  </div>
+  <div class="compare-box new">
+    <h3>🦴 The Spinal Cord (Azure)</h3>
+    <p>Lives in your Azure tenant</p>
+    <p>Azure OpenAI for LLM access</p>
+    <p>Data in Storage Account</p>
+    <p>Always on (scales to zero)</p>
+    <p>Reachable from anywhere</p>
+  </div>
+</div>
+
+<div class="callout insight">
+  <div class="callout-label">💡 Insight</div>
+  <p>
+    The cloud isn't where the rappter lives — it's where the rappter
+    <em>visits</em>. The nest (your device) is always home. The spinal
+    cord just gives it longer arms. Even after deployment, your local
+    rappter still works. You can always come home.
+  </p>
+</div>
+
+<!-- ── TRY IT ── -->
+
+<h2>🔬 Try It</h2>
+
+<div class="callout try-it">
+  <div class="callout-label">🔬 Try It</div>
+  <p>Open the ARM template and explore the parameters:</p>
+  <pre>cat azuredeploy.json | python3 -m json.tool | head -100</pre>
+  <p>Understand what each resource does by finding them in the template:</p>
+  <ul style="margin: 8px 0 8px 20px; color: var(--muted); font-size: 14px;">
+    <li><code>Microsoft.Web/sites</code> — the Function App (the brain)</li>
+    <li><code>Microsoft.CognitiveServices/accounts</code> — Azure OpenAI (the thinker)</li>
+    <li><code>Microsoft.Storage/storageAccounts</code> — Storage (the memory)</li>
+    <li><code>Microsoft.Insights/components</code> — App Insights (the vitals monitor)</li>
+    <li><code>Microsoft.Authorization/roleAssignments</code> — Entra ID permissions (zero-trust)</li>
+  </ul>
+  <p style="margin-top: 12px;">
+    If you have an Azure subscription, try the deployment:
+  </p>
+  <pre>./deploy.sh my-rapp-rg eastus2 eastus2</pre>
+  <p style="color: var(--muted); font-size: 14px;">
+    No Azure subscription? That's fine. The nest is a complete experience on its own.
+    You're not behind — you're home.
+  </p>
+</div>
+
+<!-- ── COMPLETE ── -->
+
+<div class="callout next">
+  <div class="callout-label">🪜 What's Next</div>
+  <p>
+    Your rappter can think locally and reach the cloud. But it's still
+    talking to just you. In <strong>Lesson 12: The Nervous System</strong>,
+    your rappter meets other people for the first time — through Teams,
+    through M365 Copilot, through the enterprise.
+  </p>
+  <button class="complete-btn" id="complete-btn" onclick="completeLesson()">
+    ✓ I understand — mark complete
+  </button>
+</div>
+
+<div class="footer">
+  <span>RappterAcademy — Builder Path</span>
+  <a href="../academy/">All Lessons →</a>
+</div>
+
+<script>
+  function completeLesson() {
+    if (window.opener && window.opener.rappterAcademy) {
+      window.opener.rappterAcademy.markComplete('11');
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+      if (!p['11']) { p['11'] = { completed: true, date: new Date().toISOString().slice(0,10) }; }
+      localStorage.setItem('rappteracademy_progress', JSON.stringify(p));
+    } catch {}
+    const btn = document.getElementById('complete-btn');
+    btn.textContent = '✓ Completed — 200 XP earned!';
+    btn.classList.add('done');
+  }
+  // Check if already done
+  try {
+    const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+    if (p['11']) {
+      const btn = document.getElementById('complete-btn');
+      btn.textContent = '✓ Completed — 200 XP earned!';
+      btn.classList.add('done');
+    }
+  } catch {}
+</script>
+
+</body>
+</html>

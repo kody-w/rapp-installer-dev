@@ -135,7 +135,9 @@
 
 <div class="footer">
   RappterAcademy — Governed by the <a href="../../rapp_brainstem/CONSTITUTION.md">Constitution</a> ·
-  <a href="ROADMAP.md">Roadmap</a>
+  <a href="ROADMAP.md">Roadmap</a> ·
+  <a href="THE_HELPFUL_RAPPTER_AND_PYTHON.md">📖 Kids Book</a> ·
+  <a href="../MASTER_PLAN.md">🚀 Master Plan</a>
 </div>
 
 <script>
@@ -143,24 +145,24 @@
   const LESSONS = [
     { path: 'hatchling', label: '🥚 Hatchling Path' },
     { id: '01', icon: '🫀', title: "What's Alive In There?", desc: 'Discover why your rappter has a heartbeat — and what that means.', xp: 50, href: 'lessons/01-whats-alive-in-there.html' },
-    { id: '02', icon: '🥚', title: 'Hatching Your Rappter', desc: 'Run one command. Watch it wake up.', xp: 100 },
-    { id: '03', icon: '💬', title: 'Talking to Your Rappter', desc: 'Your first conversation — and how it thinks.', xp: 75 },
-    { id: '04', icon: '📜', title: 'Giving It a Soul', desc: 'Edit soul.md and make your rappter yours.', xp: 100 },
-    { id: '05', icon: '🦾', title: 'Teaching It a Trick', desc: 'Write your first agent — a brand new skill.', xp: 150 },
+    { id: '02', icon: '🥚', title: 'Hatching Your Rappter', desc: 'Run one command. Watch it wake up.', xp: 100, href: 'lessons/02-hatching-your-rappter.html' },
+    { id: '03', icon: '💬', title: 'Talking to Your Rappter', desc: 'Your first conversation — and how it thinks.', xp: 75, href: 'lessons/03-talking-to-your-rappter.html' },
+    { id: '04', icon: '📜', title: 'Giving It a Soul', desc: 'Edit soul.md and make your rappter yours.', xp: 100, href: 'lessons/04-giving-it-a-soul.html' },
+    { id: '05', icon: '🦾', title: 'Teaching It a Trick', desc: 'Write your first agent — a brand new skill.', xp: 150, href: 'lessons/05-teaching-it-a-trick.html' },
 
     { path: 'apprentice', label: '🦎 Apprentice Path' },
-    { id: '06', icon: '🧠', title: 'How Memory Works', desc: 'How it remembers you between conversations.', xp: 100 },
-    { id: '07', icon: '🫀', title: 'The Heartbeat Deep Dive', desc: 'Inside daemon.py — what "alive" really means.', xp: 125 },
-    { id: '08', icon: '📓', title: 'Reading the Journal', desc: "Your rappter's inner monologue.", xp: 75 },
-    { id: '09', icon: '🌐', title: 'Agents That Call APIs', desc: 'Connecting to the outside world.', xp: 150 },
-    { id: '10', icon: '🩺', title: 'Debugging Like a Doctor', desc: 'When your rappter feels sick.', xp: 125 },
+    { id: '06', icon: '🧠', title: 'How Memory Works', desc: 'How it remembers you between conversations.', xp: 100, href: 'lessons/06-how-memory-works.html' },
+    { id: '07', icon: '🫀', title: 'The Heartbeat Deep Dive', desc: 'Inside daemon.py — what "alive" really means.', xp: 125, href: 'lessons/07-the-heartbeat-deep-dive.html' },
+    { id: '08', icon: '📓', title: 'Reading the Journal', desc: "Your rappter's inner monologue.", xp: 75, href: 'lessons/08-reading-the-journal.html' },
+    { id: '09', icon: '🌐', title: 'Agents That Call APIs', desc: 'Connecting to the outside world.', xp: 150, href: 'lessons/09-agents-that-call-apis.html' },
+    { id: '10', icon: '🩺', title: 'Debugging Like a Doctor', desc: 'When your rappter feels sick.', xp: 125, href: 'lessons/10-debugging-like-a-doctor.html' },
 
     { path: 'builder', label: '🐉 Builder Path' },
-    { id: '11', icon: '🦴', title: 'The Spinal Cord', desc: 'Deploy to Azure — your rappter leaves home.', xp: 200 },
-    { id: '12', icon: '🧬', title: 'The Nervous System', desc: 'Reach into Teams and M365.', xp: 200 },
-    { id: '13', icon: '🎁', title: 'Building for Others', desc: 'Package agents for the community.', xp: 175 },
-    { id: '14', icon: '📜', title: 'The Constitution', desc: 'The principles behind every decision.', xp: 100 },
-    { id: '15', icon: '✍️', title: 'Writing Your Own Lesson', desc: 'Teach someone else what you learned.', xp: 250 },
+    { id: '11', icon: '🦴', title: 'The Spinal Cord', desc: 'Deploy to Azure — your rappter leaves home.', xp: 200, href: 'lessons/11-the-spinal-cord.html' },
+    { id: '12', icon: '🧬', title: 'The Nervous System', desc: 'Reach into Teams and M365.', xp: 200, href: 'lessons/12-the-nervous-system.html' },
+    { id: '13', icon: '🎁', title: 'Building for Others', desc: 'Package agents for the community.', xp: 175, href: 'lessons/13-building-for-others.html' },
+    { id: '14', icon: '📜', title: 'The Constitution', desc: 'The principles behind every decision.', xp: 100, href: 'lessons/14-the-constitution.html' },
+    { id: '15', icon: '✍️', title: 'Writing Your Own Lesson', desc: 'Teach someone else what you learned.', xp: 250, href: 'lessons/15-writing-your-own-lesson.html' },
   ];
 
   // ── Progress (localStorage) ──

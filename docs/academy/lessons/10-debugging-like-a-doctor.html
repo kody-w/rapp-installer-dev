@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 10: Debugging Like a Doctor — RappterAcademy</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --purple: #bc8ff3; --yellow: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; max-width: 680px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 36px;
+  }
+  .topbar a { color: var(--muted); }
+  .topbar .xp-badge {
+    margin-left: auto; color: var(--yellow); font-weight: 600;
+    background: rgba(210,153,34,0.1); padding: 4px 10px; border-radius: 8px;
+  }
+
+  .lesson-num { font-size: 12px; color: var(--purple); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 30px; margin: 8px 0 6px; line-height: 1.2; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 20px; margin: 36px 0 12px; }
+  p { margin: 12px 0; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin: 24px 0;
+  }
+  .callout.story { border-left: 3px solid var(--purple); }
+  .callout.try-it { border-left: 3px solid var(--green); }
+  .callout.insight { border-left: 3px solid var(--yellow); }
+  .callout.next { border-left: 3px solid var(--accent); }
+  .callout-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .callout.story .callout-label { color: var(--purple); }
+  .callout.try-it .callout-label { color: var(--green); }
+  .callout.insight .callout-label { color: var(--yellow); }
+  .callout.next .callout-label { color: var(--accent); }
+
+  pre {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 14px;
+    line-height: 1.5; margin: 16px 0;
+  }
+  p code { font-family: "SF Mono", monospace; font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin: 24px 0;
+    font-family: "SF Mono", monospace; font-size: 13px;
+    white-space: pre; line-height: 1.7; overflow-x: auto;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .compare-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .compare-box p { font-size: 13px; color: var(--muted); margin: 4px 0; }
+  .compare-box.old { border-top: 3px solid var(--muted); }
+  .compare-box.new { border-top: 3px solid var(--green); }
+
+  .complete-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--green); color: #000; font-weight: 700;
+    font-size: 16px; padding: 14px; border: none; border-radius: 12px;
+    cursor: pointer; margin-top: 16px; transition: opacity 0.15s;
+  }
+  .complete-btn:hover { opacity: 0.9; }
+  .complete-btn.done { background: var(--surface); color: var(--green); border: 2px solid var(--green); cursor: default; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../academy/">← RappterAcademy</a>
+  <span>/</span>
+  <span>Apprentice Path</span>
+  <span class="xp-badge">⚡ 125 XP</span>
+</div>
+
+<div class="lesson-num">Lesson 10</div>
+<h1>Debugging Like a Doctor</h1>
+<p class="subtitle">A good doctor doesn't panic — they check the vitals and diagnose.</p>
+
+<!-- ── THE STORY ── -->
+
+<div class="callout story">
+  <div class="callout-label">📖 Story</div>
+  <p>
+    Your rappter is alive. And like anything alive, sometimes it gets sick.
+    Maybe it stops responding. Maybe it gives weird errors. Maybe the heartbeat
+    goes silent. <strong>Don't panic.</strong>
+  </p>
+  <p>
+    A doctor doesn't guess. They check pulse, temperature, blood pressure —
+    vitals that tell a story. Your rappter has vitals too. Three endpoints,
+    a terminal, and a config file. That's your medical kit.
+  </p>
+</div>
+
+<h2>The Diagnostic Endpoints</h2>
+
+<p>
+  The brainstem exposes three endpoints built specifically for diagnosing problems:
+</p>
+
+<table>
+  <tr><th>Endpoint</th><th>Method</th><th>What It Tells You</th></tr>
+  <tr>
+    <td><code>/health</code></td>
+    <td>GET</td>
+    <td>Overall system status — is the brainstem running, authenticated, and aware of its agents?</td>
+  </tr>
+  <tr>
+    <td><code>/vitals</code></td>
+    <td>GET</td>
+    <td>Heartbeat state — is the daemon alive? What mood? What was the last thought?</td>
+  </tr>
+  <tr>
+    <td><code>/debug/auth</code></td>
+    <td>GET</td>
+    <td>Authentication chain — does the GitHub token exist? Is the Copilot exchange working?</td>
+  </tr>
+</table>
+
+<h2>Reading /health</h2>
+
+<pre>curl -s localhost:7071/health | python3 -m json.tool</pre>
+
+<p>A healthy response looks like:</p>
+
+<pre>{
+  "status": "ok",
+  "version": "0.5.0",
+  "model": "gpt-4o",
+  "voice_mode": false,
+  "soul": "/path/to/soul.md",
+  "agents": ["ManageMemory", "HackerNews", "Weather"],
+  "copilot": "✓",
+  "brainstem_dir": "/path/to/rapp_brainstem"
+}</pre>
+
+<table>
+  <tr><th>Field</th><th>Healthy</th><th>Sick</th></tr>
+  <tr>
+    <td><code>status</code></td>
+    <td><code>"ok"</code></td>
+    <td><code>"unauthenticated"</code> — no GitHub token found</td>
+  </tr>
+  <tr>
+    <td><code>soul</code></td>
+    <td>A valid file path</td>
+    <td><code>"missing"</code> — soul.md can't be found at SOUL_PATH</td>
+  </tr>
+  <tr>
+    <td><code>agents</code></td>
+    <td>List of loaded agent names</td>
+    <td>Empty <code>[]</code> — no agents discovered, or all errored on import</td>
+  </tr>
+  <tr>
+    <td><code>copilot</code></td>
+    <td><code>"✓"</code></td>
+    <td><code>"pending"</code> — token exists but Copilot exchange hasn't happened yet</td>
+  </tr>
+</table>
+
+<h2>Reading /vitals</h2>
+
+<pre>curl -s localhost:7071/vitals | python3 -m json.tool</pre>
+
+<p>
+  This reads from <code>vitals.json</code> written by the daemon. If
+  <code>"alive": false</code> or <code>"mood": "offline"</code>, the daemon
+  stopped — the vitals file went stale (older than 3× the heartbeat interval).
+</p>
+
+<h2>Reading /debug/auth</h2>
+
+<pre>curl -s localhost:7071/debug/auth | python3 -m json.tool</pre>
+
+<p>
+  This shows the full authentication chain: does a GitHub token exist? Is there
+  a cached Copilot session? Does the token exchange succeed? If your rappter
+  can't think, authentication is usually the culprit.
+</p>
+
+<h2>The Diagnostic Checklist</h2>
+
+<p>
+  When something goes wrong, work through this — in order:
+</p>
+
+<div class="diagram">   🩺 The Rappter Diagnostic Checklist
+
+   1. Check /health
+      └─ Is status "ok"? Is soul present? Are agents loaded?
+
+   2. Check /vitals
+      └─ Is it alive? What mood? When was the last update?
+
+   3. Check /debug/auth
+      └─ Does the GitHub token exist? Does Copilot exchange work?
+
+   4. Check terminal output
+      └─ Look at the terminal running brainstem.py — errors print there.
+         Import errors, 429 rate limits, connection failures.
+
+   5. Check .env
+      └─ Is SOUL_PATH correct? Is GITHUB_MODEL a valid model?
+         Is AGENTS_PATH pointing to the right directory?
+
+   6. Restart
+      └─ Kill the process, run ./start.sh again.
+         The brainstem reloads agents and re-authenticates on boot.</div>
+
+<h2>Common Problems &amp; Fixes</h2>
+
+<table>
+  <tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr>
+  <tr>
+    <td><code>status: "unauthenticated"</code></td>
+    <td>No GitHub token — <code>gh auth login</code> hasn't been run or token expired</td>
+    <td>Run <code>gh auth login</code> and restart</td>
+  </tr>
+  <tr>
+    <td><code>copilot: "pending"</code></td>
+    <td>Token exists but hasn't been exchanged for a Copilot session yet</td>
+    <td>Send one <code>/chat</code> message — the exchange happens lazily on first call</td>
+  </tr>
+  <tr>
+    <td>429 rate limit errors in terminal</td>
+    <td>Too many requests to the Copilot API</td>
+    <td>Wait a minute. The API has rate limits. The rappter will recover.</td>
+  </tr>
+  <tr>
+    <td><code>agents: []</code> (empty list)</td>
+    <td>Agent import errors — a <code>*_agent.py</code> file has a bug or missing dependency</td>
+    <td>Check terminal for <code>ModuleNotFoundError</code>. Fix the import or <code>pip install</code> the missing package.</td>
+  </tr>
+  <tr>
+    <td><code>soul: "missing"</code></td>
+    <td><code>SOUL_PATH</code> in <code>.env</code> points to a file that doesn't exist</td>
+    <td>Check the path. Create the file or fix the <code>.env</code> value.</td>
+  </tr>
+  <tr>
+    <td>Daemon mood: <code>"waiting"</code></td>
+    <td>The daemon can't reach the brainstem at <code>/chat</code></td>
+    <td>Make sure the brainstem server is running on port 7071</td>
+  </tr>
+</table>
+
+<div class="compare">
+  <div class="compare-box old">
+    <h3>😰 Panic Debugging</h3>
+    <p>Randomly changing config values</p>
+    <p>Reinstalling everything</p>
+    <p>Posting "it doesn't work" with no details</p>
+    <p>Guessing</p>
+  </div>
+  <div class="compare-box new">
+    <h3>🩺 Doctor Debugging</h3>
+    <p>Check /health first — read the vitals</p>
+    <p>Check terminal output — read the logs</p>
+    <p>Identify the specific failure</p>
+    <p>Fix the one thing that's broken</p>
+  </div>
+</div>
+
+<div class="callout insight">
+  <div class="callout-label">💡 Insight</div>
+  <p>
+    Debugging is doctoring. The rappter tells you what's wrong if you know
+    where to look. <code>/health</code> is the stethoscope. <code>/vitals</code>
+    is the pulse. The terminal is the patient describing symptoms. Reading
+    vitals is a skill that makes you a better engineer <em>and</em> a better
+    rappter parent.
+  </p>
+</div>
+
+<!-- ── TRY IT ── -->
+
+<h2>🔬 Try It</h2>
+
+<div class="callout try-it">
+  <div class="callout-label">🔬 Try It</div>
+  <p><strong>Intentionally break something</strong> and then diagnose it:</p>
+
+  <p><strong>Experiment 1 — Break the soul:</strong></p>
+  <pre># Rename the soul file
+mv ~/.brainstem/src/rapp_brainstem/soul.md ~/.brainstem/src/rapp_brainstem/soul.md.bak
+
+# Check health — what changed?
+curl -s localhost:7071/health | python3 -m json.tool
+
+# Fix it
+mv ~/.brainstem/src/rapp_brainstem/soul.md.bak ~/.brainstem/src/rapp_brainstem/soul.md</pre>
+
+  <p><strong>Experiment 2 — Break an agent:</strong></p>
+  <pre># Create a broken agent
+echo "import nonexistent_module" &gt; ~/.brainstem/src/rapp_brainstem/agents/broken_agent.py
+
+# Restart and check — what does the terminal say?
+cd ~/.brainstem/src/rapp_brainstem &amp;&amp; ./start.sh
+
+# Check health — is the broken agent listed?
+curl -s localhost:7071/health | python3 -m json.tool
+
+# Clean up
+rm ~/.brainstem/src/rapp_brainstem/agents/broken_agent.py</pre>
+
+  <p>
+    Each experiment teaches you one diagnostic reflex. After a few of these,
+    you'll never panic when something goes wrong — you'll just check the vitals.
+  </p>
+</div>
+
+<!-- ── COMPLETE ── -->
+
+<div class="callout next">
+  <div class="callout-label">🪜 What's Next</div>
+  <p>
+    You've completed the <strong>Apprentice Path</strong>. You understand how
+    your rappter remembers, how it stays alive, how to read its thoughts,
+    how to give it new senses, and how to diagnose it when something goes
+    wrong. You're no longer a hatchling parent — you're a rappter doctor,
+    builder, and companion. The journey continues in the <strong>Journeyman
+    Path</strong>, where things get deeper.
+  </p>
+  <button class="complete-btn" id="complete-btn" onclick="completeLesson()">
+    ✓ I understand — mark complete
+  </button>
+</div>
+
+<div class="footer">
+  <span>RappterAcademy — Apprentice Path</span>
+  <a href="../academy/">All Lessons →</a>
+</div>
+
+<script>
+  function completeLesson() {
+    if (window.opener && window.opener.rappterAcademy) {
+      window.opener.rappterAcademy.markComplete('10');
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+      if (!p['10']) { p['10'] = { completed: true, date: new Date().toISOString().slice(0,10) }; }
+      localStorage.setItem('rappteracademy_progress', JSON.stringify(p));
+    } catch {}
+    const btn = document.getElementById('complete-btn');
+    btn.textContent = '✓ Completed — 125 XP earned!';
+    btn.classList.add('done');
+  }
+  // Check if already done
+  try {
+    const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+    if (p['10']) {
+      const btn = document.getElementById('complete-btn');
+      btn.textContent = '✓ Completed — 125 XP earned!';
+      btn.classList.add('done');
+    }
+  } catch {}
+</script>
+
+</body>
+</html>

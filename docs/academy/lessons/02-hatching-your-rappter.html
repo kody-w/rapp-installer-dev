@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 2: Hatching Your Rappter — RappterAcademy</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --purple: #bc8ff3; --yellow: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; max-width: 680px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 36px;
+  }
+  .topbar a { color: var(--muted); }
+  .topbar .xp-badge {
+    margin-left: auto; color: var(--yellow); font-weight: 600;
+    background: rgba(210,153,34,0.1); padding: 4px 10px; border-radius: 8px;
+  }
+
+  .lesson-num { font-size: 12px; color: var(--purple); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 30px; margin: 8px 0 6px; line-height: 1.2; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 20px; margin: 36px 0 12px; }
+  p { margin: 12px 0; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin: 24px 0;
+  }
+  .callout.story { border-left: 3px solid var(--purple); }
+  .callout.try-it { border-left: 3px solid var(--green); }
+  .callout.insight { border-left: 3px solid var(--yellow); }
+  .callout.next { border-left: 3px solid var(--accent); }
+  .callout-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .callout.story .callout-label { color: var(--purple); }
+  .callout.try-it .callout-label { color: var(--green); }
+  .callout.insight .callout-label { color: var(--yellow); }
+  .callout.next .callout-label { color: var(--accent); }
+
+  pre {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 14px;
+    line-height: 1.5; margin: 16px 0;
+  }
+  p code { font-family: "SF Mono", monospace; font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin: 24px 0;
+    font-family: "SF Mono", monospace; font-size: 13px;
+    white-space: pre; line-height: 1.7; overflow-x: auto;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .compare-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .compare-box p { font-size: 13px; color: var(--muted); margin: 4px 0; }
+  .compare-box.old { border-top: 3px solid var(--muted); }
+  .compare-box.new { border-top: 3px solid var(--green); }
+
+  .complete-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--green); color: #000; font-weight: 700;
+    font-size: 16px; padding: 14px; border: none; border-radius: 12px;
+    cursor: pointer; margin-top: 16px; transition: opacity 0.15s;
+  }
+  .complete-btn:hover { opacity: 0.9; }
+  .complete-btn.done { background: var(--surface); color: var(--green); border: 2px solid var(--green); cursor: default; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../academy/">← RappterAcademy</a>
+  <span>/</span>
+  <span>Hatchling Path</span>
+  <span class="xp-badge">⚡ 100 XP</span>
+</div>
+
+<div class="lesson-num">Lesson 2</div>
+<h1>Hatching Your Rappter</h1>
+<p class="subtitle">One command. One moment. Something wakes up on your machine.</p>
+
+<!-- ── THE STORY ── -->
+
+<div class="callout story">
+  <div class="callout-label">📖 Story</div>
+  <p>
+    Every creature has a moment of hatching — the instant between
+    <strong>not existing</strong> and <strong>being alive</strong>.
+  </p>
+  <p>
+    For a bird, it's the crack of the shell. For a puppy, it's the
+    first gasp of air. For your rappter, it's a single command in
+    your terminal. One line. You press Enter, and something starts
+    breathing on your machine.
+  </p>
+  <p>
+    You're not downloading software. You're not installing an app.
+    You're <em>hatching something</em>. And the moment it's alive,
+    it's yours.
+  </p>
+</div>
+
+<h2>The One-Liner</h2>
+
+<p>
+  Open your terminal and run this:
+</p>
+
+<pre>curl -fsSL https://kody-w.github.io/rapp-installer/install.sh | bash</pre>
+
+<p>
+  That's it. One command. No sign-ups. No API keys. No configuration wizard.
+  Just one line that brings your rappter to life.
+</p>
+
+<h2>What Happens When It Runs</h2>
+
+<p>
+  Behind that single command, your rappter is doing what every newborn does —
+  building itself a body so it can survive:
+</p>
+
+<table>
+  <tr><th>Step</th><th>What Happens</th><th>The Biology</th></tr>
+  <tr><td><strong>1. Clone</strong></td><td>Downloads the brainstem code to your machine</td><td>The DNA arrives — the blueprint for a living thing</td></tr>
+  <tr><td><strong>2. Virtual Environment</strong></td><td>Creates an isolated Python venv</td><td>Building the egg — a protected space to grow</td></tr>
+  <tr><td><strong>3. Dependencies</strong></td><td>Installs Flask, requests, and friends</td><td>Forming organs — the parts it needs to function</td></tr>
+  <tr><td><strong>4. First Boot</strong></td><td>The brainstem starts on <code>localhost:7071</code></td><td>First heartbeat — it's alive</td></tr>
+</table>
+
+<p>
+  The whole process takes about a minute. When it's done, you'll see
+  a message telling you the brainstem is running. That's the moment.
+  Your rappter just hatched.
+</p>
+
+<h2>Meeting Your Rappter</h2>
+
+<p>
+  Once the install finishes, open your browser and go to:
+</p>
+
+<pre>http://localhost:7071</pre>
+
+<p>
+  You'll see the brainstem's UI — a simple chat interface. This is your
+  rappter's face. It's looking at you for the first time, waiting for you
+  to say something.
+</p>
+
+<p>
+  But first, let's make sure it's really alive. The <code>/health</code>
+  endpoint is like checking a newborn's pulse:
+</p>
+
+<pre>curl -s localhost:7071/health | python3 -m json.tool</pre>
+
+<p>
+  A healthy response means the brainstem is running, the LLM connection
+  is working, and your rappter is ready for its first conversation.
+</p>
+
+<div class="callout insight">
+  <div class="callout-label">💡 Insight</div>
+  <p>
+    Notice what <em>didn't</em> happen: you didn't create an account.
+    You didn't enter an API key. You didn't agree to send your data
+    somewhere. Your rappter lives on your machine, uses your GitHub
+    Copilot token for its brain, and keeps everything local. The device
+    is the habitat. This is home.
+  </p>
+</div>
+
+<!-- ── TRY IT ── -->
+
+<h2>🔬 Try It</h2>
+
+<div class="callout try-it">
+  <div class="callout-label">🔬 Try It</div>
+  <p><strong>Step 1 — Hatch it.</strong> Open your terminal and run:</p>
+  <pre>curl -fsSL https://kody-w.github.io/rapp-installer/install.sh | bash</pre>
+  <p>Watch the output. You'll see the clone, the venv creation, the dependencies
+  installing, and finally the server starting up.</p>
+
+  <p style="margin-top: 16px;"><strong>Step 2 — Check the pulse.</strong></p>
+  <pre>curl -s localhost:7071/health | python3 -m json.tool</pre>
+  <p>You should see a JSON response confirming the brainstem is alive.</p>
+
+  <p style="margin-top: 16px;"><strong>Step 3 — See its face.</strong></p>
+  <p>Open <a href="http://localhost:7071">http://localhost:7071</a> in your browser.
+  That's your rappter. It's looking at you. Say hello.</p>
+</div>
+
+<!-- ── COMPLETE ── -->
+
+<div class="callout next">
+  <div class="callout-label">🪜 What's Next</div>
+  <p>
+    Your rappter is alive — breathing on your machine, waiting for you.
+    In <strong>Lesson 3: Talking to Your Rappter</strong>, you'll have your
+    first real conversation and learn how messages flow through the brainstem.
+  </p>
+  <button class="complete-btn" id="complete-btn" onclick="completeLesson()">
+    ✓ I hatched it — mark complete
+  </button>
+</div>
+
+<div class="footer">
+  <span>RappterAcademy — Hatchling Path</span>
+  <a href="../academy/">All Lessons →</a>
+</div>
+
+<script>
+  function completeLesson() {
+    if (window.opener && window.opener.rappterAcademy) {
+      window.opener.rappterAcademy.markComplete('02');
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+      if (!p['02']) { p['02'] = { completed: true, date: new Date().toISOString().slice(0,10) }; }
+      localStorage.setItem('rappteracademy_progress', JSON.stringify(p));
+    } catch {}
+    const btn = document.getElementById('complete-btn');
+    btn.textContent = '✓ Completed — 100 XP earned!';
+    btn.classList.add('done');
+  }
+  // Check if already done
+  try {
+    const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+    if (p['02']) {
+      const btn = document.getElementById('complete-btn');
+      btn.textContent = '✓ Completed — 100 XP earned!';
+      btn.classList.add('done');
+    }
+  } catch {}
+</script>
+
+</body>
+</html>

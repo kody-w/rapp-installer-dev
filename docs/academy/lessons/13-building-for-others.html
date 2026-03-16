@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 13: Building for Others — RappterAcademy</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --purple: #bc8ff3; --yellow: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; max-width: 680px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 36px;
+  }
+  .topbar a { color: var(--muted); }
+  .topbar .xp-badge {
+    margin-left: auto; color: var(--yellow); font-weight: 600;
+    background: rgba(210,153,34,0.1); padding: 4px 10px; border-radius: 8px;
+  }
+
+  .lesson-num { font-size: 12px; color: var(--purple); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 30px; margin: 8px 0 6px; line-height: 1.2; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 20px; margin: 36px 0 12px; }
+  p { margin: 12px 0; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin: 24px 0;
+  }
+  .callout.story { border-left: 3px solid var(--purple); }
+  .callout.try-it { border-left: 3px solid var(--green); }
+  .callout.insight { border-left: 3px solid var(--yellow); }
+  .callout.next { border-left: 3px solid var(--accent); }
+  .callout-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .callout.story .callout-label { color: var(--purple); }
+  .callout.try-it .callout-label { color: var(--green); }
+  .callout.insight .callout-label { color: var(--yellow); }
+  .callout.next .callout-label { color: var(--accent); }
+
+  pre {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 14px;
+    line-height: 1.5; margin: 16px 0;
+  }
+  p code { font-family: "SF Mono", monospace; font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin: 24px 0;
+    font-family: "SF Mono", monospace; font-size: 13px;
+    white-space: pre; line-height: 1.7; overflow-x: auto;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .compare-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .compare-box p { font-size: 13px; color: var(--muted); margin: 4px 0; }
+  .compare-box.old { border-top: 3px solid var(--muted); }
+  .compare-box.new { border-top: 3px solid var(--green); }
+
+  .complete-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--green); color: #000; font-weight: 700;
+    font-size: 16px; padding: 14px; border: none; border-radius: 12px;
+    cursor: pointer; margin-top: 16px; transition: opacity 0.15s;
+  }
+  .complete-btn:hover { opacity: 0.9; }
+  .complete-btn.done { background: var(--surface); color: var(--green); border: 2px solid var(--green); cursor: default; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../academy/">← RappterAcademy</a>
+  <span>/</span>
+  <span>Builder Path</span>
+  <span class="xp-badge">⚡ 175 XP</span>
+</div>
+
+<div class="lesson-num">Lesson 13</div>
+<h1>Building for Others</h1>
+<p class="subtitle">You've been building skills for your rappter. What if you could teach everyone's?</p>
+
+<!-- ── THE STORY ── -->
+
+<div class="callout story">
+  <div class="callout-label">📖 Story</div>
+  <p>
+    Remember trading Pokémon cards at recess?
+  </p>
+  <p>
+    Nobody needed a marketplace. Nobody needed an app store review process.
+    Nobody needed a deployment pipeline. You had a card. Your friend wanted
+    it. You handed it over. Done. Two seconds. Both of you walk away happy.
+  </p>
+  <p>
+    That's how rappter skills work. Every agent is a <strong>single Python
+    file</strong>. The whole skill — name, description, parameters, action
+    — lives in one place. Want to share it? Copy the file. Want to teach
+    someone else's rappter? Drop it in their <code>agents/</code> folder.
+  </p>
+  <p>
+    You've been building skills for <em>your</em> rappter. Now it's time
+    to build for the <strong>pack</strong>.
+  </p>
+</div>
+
+<h2>Why One File Changes Everything</h2>
+
+<p>
+  Article III-b of the Constitution says it plainly: <strong>One File,
+  One Skill</strong>. This isn't just a simplicity preference — it's a
+  distribution strategy. Compare:
+</p>
+
+<div class="compare">
+  <div class="compare-box old">
+    <h3>📦 Plugin Ecosystems</h3>
+    <p>Package manager required</p>
+    <p>Config files, manifests, YAML</p>
+    <p>Version conflicts and dependencies</p>
+    <p>Publish → review → approve → install</p>
+    <p>Requires the platform to exist</p>
+  </div>
+  <div class="compare-box new">
+    <h3>🃏 Trading Card Ecosystem</h3>
+    <p>Copy one file</p>
+    <p>Everything is self-contained</p>
+    <p>No version conflicts possible</p>
+    <p>Hand it over → done</p>
+    <p>Just needs two people</p>
+  </div>
+</div>
+
+<p>
+  Plugins need a platform. Cards just need two people. That's why the
+  ecosystem will grow faster than any app store ever could.
+</p>
+
+<h2>Anatomy of a Shareable Agent</h2>
+
+<p>
+  A good community agent has four things that make it instantly usable by anyone:
+</p>
+
+<pre>from basic_agent import BasicAgent
+
+class WeatherAgent(BasicAgent):
+    def __init__(self):
+        self.name = "WeatherAgent"
+        self.metadata = {
+            "name": self.name,
+            "description": "Get current weather for any city. "
+                           "Ask me about weather, temperature, "
+                           "or conditions anywhere in the world.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "City name, e.g. 'Seattle'"
+                    }
+                },
+                "required": ["city"]
+            }
+        }
+        super().__init__()
+
+    def perform(self, city="", **kwargs):
+        """Fetch weather for the given city."""
+        # Your implementation here
+        return f"Weather for {city}: ..."</pre>
+
+<p>The four things that make this shareable:</p>
+
+<table>
+  <tr><th>#</th><th>Element</th><th>Why It Matters</th></tr>
+  <tr>
+    <td>1</td>
+    <td><strong>Clear description</strong></td>
+    <td>The LLM reads this to decide when to call the agent. A vague description means the skill never gets used.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><strong>Good parameter docs</strong></td>
+    <td>Each parameter has a description the LLM can understand. Don't make the AI guess what "q" means.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><strong>Graceful failures</strong></td>
+    <td>If a dependency is missing or an API is down, return a helpful message — don't crash the brainstem.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><strong>A docstring</strong></td>
+    <td>Humans read code too. One sentence explaining what <code>perform()</code> does.</td>
+  </tr>
+</table>
+
+<h2>Community Agent Repos</h2>
+
+<p>
+  Beyond handing files to friends, RAPP supports <strong>community agent
+  repos</strong> through <code>.repos.json</code>. This file lists GitHub
+  repositories that contain agents your rappter can hot-load:
+</p>
+
+<pre>[
+  {
+    "url": "https://github.com/someone/cool-agents",
+    "agents": ["weather_agent.py", "stock_agent.py"]
+  }
+]</pre>
+
+<p>
+  When the brainstem starts, it clones these repos, installs any missing
+  pip dependencies automatically, and registers the agents. Your rappter
+  just learned new skills — from someone else's work.
+</p>
+
+<div class="diagram">   📁 Your agents/
+    ├── my_agent.py         (yours)
+    ├── helper_agent.py     (yours)
+    │
+   📡 .repos.json → GitHub repos
+    ├── weather_agent.py    (community)
+    ├── stock_agent.py      (community)
+    └── trivia_agent.py     (community)
+
+   All registered. All callable. All one file each.</div>
+
+<div class="callout insight">
+  <div class="callout-label">💡 Insight</div>
+  <p>
+    The best agents will spread like Pokémon cards at recess — person to
+    person, because sharing is literally just copying one file. That's the
+    ecosystem. No gatekeepers. No review boards. No waiting for approval.
+    Just skills flowing between rappters, making the whole pack smarter.
+  </p>
+</div>
+
+<!-- ── TRY IT ── -->
+
+<h2>🔬 Try It</h2>
+
+<div class="callout try-it">
+  <div class="callout-label">🔬 Try It</div>
+  <p>Take your best agent and make it share-ready:</p>
+  <ol style="margin: 8px 0 8px 20px; color: var(--muted); font-size: 14px;">
+    <li>Open the <code>*_agent.py</code> file you're most proud of</li>
+    <li>Is the <code>description</code> clear enough for a stranger's LLM to understand? Rewrite it if not.</li>
+    <li>Does every parameter have a <code>description</code>? Add them.</li>
+    <li>What happens if an external API is down? Add a try/except with a helpful message.</li>
+    <li>Add a one-line docstring to <code>perform()</code></li>
+  </ol>
+  <p style="margin-top: 12px;">Now share it:</p>
+  <ul style="margin: 8px 0 8px 20px; color: var(--muted); font-size: 14px;">
+    <li>Post it as a <strong>GitHub Gist</strong> — one click, instant link</li>
+    <li>Send it to a friend — they drop it in <code>agents/</code> and restart</li>
+    <li>Create a repo of your agents — others can add it to their <code>.repos.json</code></li>
+  </ul>
+  <p style="color: var(--muted); font-size: 14px; margin-top: 12px;">
+    You just created your first trading card. How many more are in you?
+  </p>
+</div>
+
+<!-- ── COMPLETE ── -->
+
+<div class="callout next">
+  <div class="callout-label">🪜 What's Next</div>
+  <p>
+    You've built skills, shared them, and seen how the ecosystem works.
+    But why does it all work this way? Every design decision has a reason.
+    In <strong>Lesson 14: The Constitution</strong>, we'll read the
+    founding document together and connect every article to something
+    you've already experienced.
+  </p>
+  <button class="complete-btn" id="complete-btn" onclick="completeLesson()">
+    ✓ I understand — mark complete
+  </button>
+</div>
+
+<div class="footer">
+  <span>RappterAcademy — Builder Path</span>
+  <a href="../academy/">All Lessons →</a>
+</div>
+
+<script>
+  function completeLesson() {
+    if (window.opener && window.opener.rappterAcademy) {
+      window.opener.rappterAcademy.markComplete('13');
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+      if (!p['13']) { p['13'] = { completed: true, date: new Date().toISOString().slice(0,10) }; }
+      localStorage.setItem('rappteracademy_progress', JSON.stringify(p));
+    } catch {}
+    const btn = document.getElementById('complete-btn');
+    btn.textContent = '✓ Completed — 175 XP earned!';
+    btn.classList.add('done');
+  }
+  // Check if already done
+  try {
+    const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+    if (p['13']) {
+      const btn = document.getElementById('complete-btn');
+      btn.textContent = '✓ Completed — 175 XP earned!';
+      btn.classList.add('done');
+    }
+  } catch {}
+</script>
+
+</body>
+</html>

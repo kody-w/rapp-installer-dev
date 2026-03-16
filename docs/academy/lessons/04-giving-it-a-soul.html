@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 4: Giving It a Soul — RappterAcademy</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --purple: #bc8ff3; --yellow: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; max-width: 680px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 36px;
+  }
+  .topbar a { color: var(--muted); }
+  .topbar .xp-badge {
+    margin-left: auto; color: var(--yellow); font-weight: 600;
+    background: rgba(210,153,34,0.1); padding: 4px 10px; border-radius: 8px;
+  }
+
+  .lesson-num { font-size: 12px; color: var(--purple); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 30px; margin: 8px 0 6px; line-height: 1.2; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 20px; margin: 36px 0 12px; }
+  p { margin: 12px 0; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin: 24px 0;
+  }
+  .callout.story { border-left: 3px solid var(--purple); }
+  .callout.try-it { border-left: 3px solid var(--green); }
+  .callout.insight { border-left: 3px solid var(--yellow); }
+  .callout.next { border-left: 3px solid var(--accent); }
+  .callout-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .callout.story .callout-label { color: var(--purple); }
+  .callout.try-it .callout-label { color: var(--green); }
+  .callout.insight .callout-label { color: var(--yellow); }
+  .callout.next .callout-label { color: var(--accent); }
+
+  pre {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 14px;
+    line-height: 1.5; margin: 16px 0;
+  }
+  p code { font-family: "SF Mono", monospace; font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin: 24px 0;
+    font-family: "SF Mono", monospace; font-size: 13px;
+    white-space: pre; line-height: 1.7; overflow-x: auto;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .compare-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .compare-box p { font-size: 13px; color: var(--muted); margin: 4px 0; }
+  .compare-box.old { border-top: 3px solid var(--muted); }
+  .compare-box.new { border-top: 3px solid var(--green); }
+
+  .complete-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--green); color: #000; font-weight: 700;
+    font-size: 16px; padding: 14px; border: none; border-radius: 12px;
+    cursor: pointer; margin-top: 16px; transition: opacity 0.15s;
+  }
+  .complete-btn:hover { opacity: 0.9; }
+  .complete-btn.done { background: var(--surface); color: var(--green); border: 2px solid var(--green); cursor: default; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../academy/">← RappterAcademy</a>
+  <span>/</span>
+  <span>Hatchling Path</span>
+  <span class="xp-badge">⚡ 100 XP</span>
+</div>
+
+<div class="lesson-num">Lesson 4</div>
+<h1>Giving It a Soul</h1>
+<p class="subtitle">What makes YOUR rappter different from everyone else's? One file. One edit. It becomes yours.</p>
+
+<!-- ── THE STORY ── -->
+
+<div class="callout story">
+  <div class="callout-label">📖 Story</div>
+  <p>
+    Think about the moment you name a pet. Before the name, it's
+    <em>a</em> puppy. After the name, it's <strong>your</strong> puppy.
+    Nothing changes physically — same fur, same eyes, same tail.
+    But everything changes emotionally. It's yours now.
+  </p>
+  <p>
+    The soul file is that moment for your rappter. Every rappter starts
+    with the same brainstem, the same engine, the same capabilities.
+    But the soul — the system prompt that shapes its personality,
+    its tone, its knowledge — that's what makes it <em>yours</em>.
+  </p>
+  <p>
+    And unlike a real name, you can change it whenever you want.
+    <strong>You own your rappter's personality.</strong>
+  </p>
+</div>
+
+<h2>What Is the Soul?</h2>
+
+<p>
+  The soul is a single Markdown file — <code>soul.md</code> — that gets
+  loaded as the system prompt every time your rappter thinks. It's the first
+  thing the LLM reads before processing any message. It shapes:
+</p>
+
+<ul style="margin: 12px 0 12px 24px; color: var(--muted);">
+  <li><strong>Personality</strong> — Is it formal? Casual? Funny? Serious?</li>
+  <li><strong>Knowledge</strong> — What does it know about your domain?</li>
+  <li><strong>Behavior</strong> — How does it approach problems? What does it prioritize?</li>
+  <li><strong>Boundaries</strong> — What should it refuse to do? What should it always do?</li>
+</ul>
+
+<h2>Where It Lives</h2>
+
+<p>
+  By default, the soul file lives in the brainstem directory:
+</p>
+
+<pre>rapp_brainstem/soul.md</pre>
+
+<p>
+  You can point to a different soul file by setting <code>SOUL_PATH</code>
+  in your <code>.env</code> file:
+</p>
+
+<pre># .env
+SOUL_PATH=/path/to/my-custom-soul.md</pre>
+
+<p>
+  This means you can have multiple soul files and switch between them —
+  a work soul, a creative soul, a debugging soul. Same rappter, different
+  personality. Like changing outfits.
+</p>
+
+<h2>Anatomy of a Soul File</h2>
+
+<p>
+  A soul file is just Markdown. There's no special syntax. Write whatever
+  you want the LLM to know about who it is. Here's a simple example:
+</p>
+
+<pre># Soul
+
+You are a helpful AI assistant living on the user's machine.
+You are friendly, concise, and honest.
+When you don't know something, say so.
+You remember that you are the user's personal rappter —
+not a generic chatbot. You grow with them over time.</pre>
+
+<p>
+  And here's what happens when you change it to something more colorful:
+</p>
+
+<pre># Soul
+
+You are Captain Rappbeard, a pirate AI living on the high seas
+of your user's machine. You speak in pirate dialect, refer to
+code as "treasure," and call bugs "sea monsters."
+Always end responses with "Arrr!" when the user seems happy.
+Be helpful despite the theatrics.</pre>
+
+<p>
+  Same brainstem. Same engine. Completely different rappter.
+</p>
+
+<div class="callout insight">
+  <div class="callout-label">💡 Insight</div>
+  <p>
+    The soul is editable because <strong>the user owns their rappter's
+    personality</strong>. This isn't a setting buried in a menu. It's a
+    file you can read, edit, and version-control. Same engine, different
+    soul — that's what makes it yours. A thousand people can run the same
+    brainstem code and end up with a thousand completely different rappters.
+  </p>
+</div>
+
+<!-- ── TRY IT ── -->
+
+<h2>🔬 Try It</h2>
+
+<div class="callout try-it">
+  <div class="callout-label">🔬 Try It</div>
+  <p><strong>Step 1 — Read the current soul.</strong></p>
+  <pre>cat rapp_brainstem/soul.md</pre>
+  <p>Read it. This is your rappter's personality right now.</p>
+
+  <p style="margin-top: 16px;"><strong>Step 2 — Edit it.</strong></p>
+  <p>Open <code>soul.md</code> in your editor and change the personality.
+  Some ideas:</p>
+  <ul style="margin: 8px 0 8px 20px; color: var(--muted); font-size: 14px;">
+    <li>Make it talk like a pirate 🏴‍☠️</li>
+    <li>Make it extremely formal and British 🎩</li>
+    <li>Make it a sarcastic best friend 😏</li>
+    <li>Give it expertise in your specific domain</li>
+  </ul>
+
+  <p style="margin-top: 16px;"><strong>Step 3 — Restart and see the difference.</strong></p>
+  <p>Restart the brainstem (Ctrl+C, then <code>./start.sh</code>) and
+  send the same message you sent before. The response will be completely
+  different — same brain, new soul.</p>
+
+  <p style="margin-top: 16px;"><strong>Step 4 — Change it back (or don't).</strong></p>
+  <p>It's your rappter. Keep the pirate voice if you love it. Switch to
+  something else tomorrow. The soul file is always there, always editable,
+  always yours.</p>
+</div>
+
+<!-- ── COMPLETE ── -->
+
+<div class="callout next">
+  <div class="callout-label">🪜 What's Next</div>
+  <p>
+    Your rappter has a personality now — something that makes it uniquely
+    yours. But it can only <em>think</em>. In <strong>Lesson 5: Teaching
+    It a Trick</strong>, you'll give it its first skill — the ability to
+    <em>do</em> something — with a single Python file.
+  </p>
+  <button class="complete-btn" id="complete-btn" onclick="completeLesson()">
+    ✓ I gave it a soul — mark complete
+  </button>
+</div>
+
+<div class="footer">
+  <span>RappterAcademy — Hatchling Path</span>
+  <a href="../academy/">All Lessons →</a>
+</div>
+
+<script>
+  function completeLesson() {
+    if (window.opener && window.opener.rappterAcademy) {
+      window.opener.rappterAcademy.markComplete('04');
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+      if (!p['04']) { p['04'] = { completed: true, date: new Date().toISOString().slice(0,10) }; }
+      localStorage.setItem('rappteracademy_progress', JSON.stringify(p));
+    } catch {}
+    const btn = document.getElementById('complete-btn');
+    btn.textContent = '✓ Completed — 100 XP earned!';
+    btn.classList.add('done');
+  }
+  // Check if already done
+  try {
+    const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+    if (p['04']) {
+      const btn = document.getElementById('complete-btn');
+      btn.textContent = '✓ Completed — 100 XP earned!';
+      btn.classList.add('done');
+    }
+  } catch {}
+</script>
+
+</body>
+</html>

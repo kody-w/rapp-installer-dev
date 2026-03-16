@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 6: How Memory Works — RappterAcademy</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --purple: #bc8ff3; --yellow: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; max-width: 680px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 36px;
+  }
+  .topbar a { color: var(--muted); }
+  .topbar .xp-badge {
+    margin-left: auto; color: var(--yellow); font-weight: 600;
+    background: rgba(210,153,34,0.1); padding: 4px 10px; border-radius: 8px;
+  }
+
+  .lesson-num { font-size: 12px; color: var(--purple); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 30px; margin: 8px 0 6px; line-height: 1.2; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 20px; margin: 36px 0 12px; }
+  p { margin: 12px 0; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin: 24px 0;
+  }
+  .callout.story { border-left: 3px solid var(--purple); }
+  .callout.try-it { border-left: 3px solid var(--green); }
+  .callout.insight { border-left: 3px solid var(--yellow); }
+  .callout.next { border-left: 3px solid var(--accent); }
+  .callout-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .callout.story .callout-label { color: var(--purple); }
+  .callout.try-it .callout-label { color: var(--green); }
+  .callout.insight .callout-label { color: var(--yellow); }
+  .callout.next .callout-label { color: var(--accent); }
+
+  pre {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 14px;
+    line-height: 1.5; margin: 16px 0;
+  }
+  p code { font-family: "SF Mono", monospace; font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin: 24px 0;
+    font-family: "SF Mono", monospace; font-size: 13px;
+    white-space: pre; line-height: 1.7; overflow-x: auto;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .compare-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .compare-box p { font-size: 13px; color: var(--muted); margin: 4px 0; }
+  .compare-box.old { border-top: 3px solid var(--muted); }
+  .compare-box.new { border-top: 3px solid var(--green); }
+
+  .complete-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--green); color: #000; font-weight: 700;
+    font-size: 16px; padding: 14px; border: none; border-radius: 12px;
+    cursor: pointer; margin-top: 16px; transition: opacity 0.15s;
+  }
+  .complete-btn:hover { opacity: 0.9; }
+  .complete-btn.done { background: var(--surface); color: var(--green); border: 2px solid var(--green); cursor: default; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../academy/">← RappterAcademy</a>
+  <span>/</span>
+  <span>Apprentice Path</span>
+  <span class="xp-badge">⚡ 100 XP</span>
+</div>
+
+<div class="lesson-num">Lesson 6</div>
+<h1>How Memory Works</h1>
+<p class="subtitle">Memory is what separates a conversation from a relationship.</p>
+
+<!-- ── THE STORY ── -->
+
+<div class="callout story">
+  <div class="callout-label">📖 Story</div>
+  <p>
+    You've been talking to your rappter for days. You've told it your name,
+    your projects, your preferences. But here's the question that matters:
+    <strong>does it remember yesterday?</strong>
+  </p>
+  <p>
+    Most AI tools don't. Close the tab, the conversation evaporates. Open it
+    again tomorrow and you're introducing yourself all over again. It's like
+    meeting someone with permanent amnesia — every encounter is the first.
+  </p>
+  <p>
+    Your rappter is different. It has a memory system — a real one, writing
+    to real files on your real hard drive. And that changes everything.
+  </p>
+</div>
+
+<h2>The Memory Architecture</h2>
+
+<p>
+  Memory in the brainstem is handled by <code>local_storage.py</code> — a
+  storage manager that reads and writes JSON files to the
+  <code>.brainstem_data/</code> directory sitting right next to the brainstem code.
+</p>
+
+<div class="diagram">   .brainstem_data/
+   ├── shared_memories/
+   │   └── memory.json        ← What the rappter remembers about YOU
+   │
+   ├── memory/
+   │   └── {user-guid}/
+   │       └── user_memory.json  ← Per-user memories (multi-user mode)
+   │
+   ├── journal.json            ← The heartbeat's inner monologue
+   └── vitals.json             ← Current heartbeat state</div>
+
+<p>
+  The key file is <code>shared_memories/memory.json</code>. This is where
+  facts about you — your name, your preferences, your projects — get stored
+  as plain JSON. No vector database. No embedding model. Just a file on
+  your disk that you can open and read.
+</p>
+
+<h2>How Memories Get Created</h2>
+
+<p>
+  The memory agent listens during conversations. When you say something
+  worth remembering — "my favorite language is Python" or "I'm working on
+  Project Atlas" — the agent writes it to <code>memory.json</code> using the
+  <code>AzureFileStorageManager</code> shim in <code>local_storage.py</code>.
+</p>
+
+<p>
+  Here's what actually happens under the hood:
+</p>
+
+<table>
+  <tr><th>Step</th><th>What Happens</th><th>Where</th></tr>
+  <tr><td><strong>1. You speak</strong></td><td>"Remember that my favorite color is blue"</td><td><code>POST /chat</code></td></tr>
+  <tr><td><strong>2. LLM decides</strong></td><td>Recognizes this is a memory request, calls the memory agent</td><td>Tool-calling loop in <code>brainstem.py</code></td></tr>
+  <tr><td><strong>3. Agent fires</strong></td><td>Memory agent's <code>perform()</code> runs</td><td><code>agents/memory_agent.py</code></td></tr>
+  <tr><td><strong>4. Storage writes</strong></td><td><code>write_json()</code> saves to disk</td><td><code>local_storage.py</code></td></tr>
+  <tr><td><strong>5. File updated</strong></td><td><code>memory.json</code> now contains your fact</td><td><code>.brainstem_data/shared_memories/</code></td></tr>
+</table>
+
+<p>
+  Next time you talk to the rappter — even in a brand new session — it reads
+  <code>memory.json</code> and knows your favorite color is blue. The memory
+  <em>persists</em> because it's a file, not a variable. Restart the server,
+  reboot your machine — the file is still there.
+</p>
+
+<h2>The Storage Manager</h2>
+
+<p>
+  The <code>AzureFileStorageManager</code> class in <code>local_storage.py</code>
+  is a local-first shim. It mirrors the same API that agents use in the cloud
+  (Azure File Storage), but writes everything to <code>.brainstem_data/</code>
+  on your disk instead. This is the import shim trick — agents don't even know
+  they're running locally.
+</p>
+
+<pre>class AzureFileStorageManager:
+    def read_json(self, file_path=None):
+        # Reads from .brainstem_data/shared_memories/memory.json
+        path = file_path or self._file_path()
+        with open(path, "r") as f:
+            return json.load(f)
+
+    def write_json(self, data, file_path=None):
+        # Writes to .brainstem_data/shared_memories/memory.json
+        path = file_path or self._file_path()
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)</pre>
+
+<p>
+  It also supports per-user memory paths at
+  <code>.brainstem_data/memory/{guid}/user_memory.json</code> for when multiple
+  users share a single brainstem. But locally, most rappters use the shared path.
+</p>
+
+<div class="compare">
+  <div class="compare-box old">
+    <h3>💨 Without Memory</h3>
+    <p>Every session starts from zero</p>
+    <p>"What's your name?" — every single time</p>
+    <p>Can't reference past conversations</p>
+    <p>A stranger each morning</p>
+  </div>
+  <div class="compare-box new">
+    <h3>💾 With Memory</h3>
+    <p>Every session builds on the last</p>
+    <p>Knows your name, projects, preferences</p>
+    <p>Recalls what you talked about last week</p>
+    <p>A companion that grows with you</p>
+  </div>
+</div>
+
+<div class="callout insight">
+  <div class="callout-label">💡 Insight</div>
+  <p>
+    Memory is what makes a naïve organism grow. Without it, the rappter would
+    be born fresh every day — a perpetual hatchling. With it, every conversation
+    becomes an experience that compounds. Day 1 it learns your name. Day 7 it
+    knows your project. Day 30 it anticipates what you need. That's not
+    programming. That's a growth curve.
+  </p>
+</div>
+
+<!-- ── TRY IT ── -->
+
+<h2>🔬 Try It</h2>
+
+<div class="callout try-it">
+  <div class="callout-label">🔬 Try It</div>
+  <p>Tell your rappter to remember something specific:</p>
+  <pre>curl -s localhost:7071/chat -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"user_input": "Remember that my favorite color is blue"}'</pre>
+  <p>Now start a brand new session and ask:</p>
+  <pre>curl -s localhost:7071/chat -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"user_input": "What is my favorite color?"}'</pre>
+  <p>It should know. Now look at the actual memory file:</p>
+  <pre>cat ~/.brainstem/src/rapp_brainstem/.brainstem_data/shared_memories/memory.json</pre>
+  <p>
+    There it is — your fact, sitting in a plain JSON file on your disk.
+    No cloud. No database. Just a file you can read, edit, or delete.
+    <strong>Your rappter's memory belongs to you.</strong>
+  </p>
+</div>
+
+<!-- ── COMPLETE ── -->
+
+<div class="callout next">
+  <div class="callout-label">🪜 What's Next</div>
+  <p>
+    Now you know how your rappter remembers. But memory isn't the only thing
+    happening between conversations. In <strong>Lesson 7: The Heartbeat Deep Dive</strong>,
+    you'll look under the hood at the daemon process that keeps your rappter
+    alive and aware — even when you're not talking to it.
+  </p>
+  <button class="complete-btn" id="complete-btn" onclick="completeLesson()">
+    ✓ I understand — mark complete
+  </button>
+</div>
+
+<div class="footer">
+  <span>RappterAcademy — Apprentice Path</span>
+  <a href="../academy/">All Lessons →</a>
+</div>
+
+<script>
+  function completeLesson() {
+    if (window.opener && window.opener.rappterAcademy) {
+      window.opener.rappterAcademy.markComplete('06');
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+      if (!p['06']) { p['06'] = { completed: true, date: new Date().toISOString().slice(0,10) }; }
+      localStorage.setItem('rappteracademy_progress', JSON.stringify(p));
+    } catch {}
+    const btn = document.getElementById('complete-btn');
+    btn.textContent = '✓ Completed — 100 XP earned!';
+    btn.classList.add('done');
+  }
+  // Check if already done
+  try {
+    const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+    if (p['06']) {
+      const btn = document.getElementById('complete-btn');
+      btn.textContent = '✓ Completed — 100 XP earned!';
+      btn.classList.add('done');
+    }
+  } catch {}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 5: Teaching It a Trick — RappterAcademy</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --purple: #bc8ff3; --yellow: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; max-width: 680px; margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 36px;
+  }
+  .topbar a { color: var(--muted); }
+  .topbar .xp-badge {
+    margin-left: auto; color: var(--yellow); font-weight: 600;
+    background: rgba(210,153,34,0.1); padding: 4px 10px; border-radius: 8px;
+  }
+
+  .lesson-num { font-size: 12px; color: var(--purple); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  h1 { font-size: 30px; margin: 8px 0 6px; line-height: 1.2; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 20px; margin: 36px 0 12px; }
+  p { margin: 12px 0; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px; margin: 24px 0;
+  }
+  .callout.story { border-left: 3px solid var(--purple); }
+  .callout.try-it { border-left: 3px solid var(--green); }
+  .callout.insight { border-left: 3px solid var(--yellow); }
+  .callout.next { border-left: 3px solid var(--accent); }
+  .callout-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .callout.story .callout-label { color: var(--purple); }
+  .callout.try-it .callout-label { color: var(--green); }
+  .callout.insight .callout-label { color: var(--yellow); }
+  .callout.next .callout-label { color: var(--accent); }
+
+  pre {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 14px;
+    line-height: 1.5; margin: 16px 0;
+  }
+  p code { font-family: "SF Mono", monospace; font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+
+  .diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin: 24px 0;
+    font-family: "SF Mono", monospace; font-size: 13px;
+    white-space: pre; line-height: 1.7; overflow-x: auto;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .compare-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .compare-box p { font-size: 13px; color: var(--muted); margin: 4px 0; }
+  .compare-box.old { border-top: 3px solid var(--muted); }
+  .compare-box.new { border-top: 3px solid var(--green); }
+
+  .complete-btn {
+    display: block; width: 100%; text-align: center;
+    background: var(--green); color: #000; font-weight: 700;
+    font-size: 16px; padding: 14px; border: none; border-radius: 12px;
+    cursor: pointer; margin-top: 16px; transition: opacity 0.15s;
+  }
+  .complete-btn:hover { opacity: 0.9; }
+  .complete-btn.done { background: var(--surface); color: var(--green); border: 2px solid var(--green); cursor: default; }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../academy/">← RappterAcademy</a>
+  <span>/</span>
+  <span>Hatchling Path</span>
+  <span class="xp-badge">⚡ 150 XP</span>
+</div>
+
+<div class="lesson-num">Lesson 5</div>
+<h1>Teaching It a Trick</h1>
+<p class="subtitle">Your rappter can think. Time to teach it to DO something — with a single file.</p>
+
+<!-- ── THE STORY ── -->
+
+<div class="callout story">
+  <div class="callout-label">📖 Story</div>
+  <p>
+    A puppy can think. It can feel. It can love you. But it can't
+    <strong>fetch</strong> until you teach it. The brain was always
+    capable — it just needed the skill.
+  </p>
+  <p>
+    Your rappter is the same. Right now it can have conversations, but
+    it can't <em>do</em> things in the world — check the weather, flip
+    a coin, look up a file, query a database. Those abilities are
+    <strong>agents</strong>: small Python files that give your rappter
+    new skills.
+  </p>
+  <p>
+    And here's the beautiful part: <strong>one file = one skill</strong>.
+    No config files. No dependency chains. No registration step. Drop a
+    file in the agents folder, and your rappter learns it automatically.
+    Like teaching a puppy to fetch by just showing it once.
+  </p>
+</div>
+
+<h2>The BasicAgent Pattern</h2>
+
+<p>
+  Every rappter skill follows the same simple pattern: a Python class
+  that extends <code>BasicAgent</code>. The class has three parts:
+</p>
+
+<table>
+  <tr><th>Part</th><th>What It Does</th><th>The Analogy</th></tr>
+  <tr><td><strong>name</strong></td><td>How the rappter refers to this skill</td><td>The trick's name — "fetch," "sit," "roll over"</td></tr>
+  <tr><td><strong>metadata</strong></td><td>Description + parameters the LLM reads to decide when to use it</td><td>The card description — what's on the Pokémon card</td></tr>
+  <tr><td><strong>perform()</strong></td><td>The actual code that runs when the skill is called</td><td>The action — what happens when the puppy fetches</td></tr>
+</table>
+
+<h2>Your First Agent: The Joke Teller</h2>
+
+<p>
+  Let's build a simple agent that tells jokes. Here's the entire file:
+</p>
+
+<pre>import random
+from basic_agent import BasicAgent
+
+class JokeAgent(BasicAgent):
+    def __init__(self):
+        self.name = "JokeAgent"
+        self.metadata = {
+            "name": self.name,
+            "description": "Tells a random joke. Call this when the user asks for a joke, wants to laugh, or needs cheering up.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "Optional topic for the joke (e.g. 'programming', 'animals')"
+                    }
+                },
+                "required": []
+            }
+        }
+        super().__init__()
+
+    def perform(self, topic="", **kwargs):
+        jokes = [
+            "Why do programmers prefer dark mode? Because light attracts bugs.",
+            "There are only 10 kinds of people — those who understand binary and those who don't.",
+            "Why did the developer go broke? Because he used up all his cache.",
+            "What's a programmer's favorite hangout place? Foo Bar.",
+            "Why do Java developers wear glasses? Because they can't C#.",
+        ]
+        joke = random.choice(jokes)
+        if topic:
+            return f"Here's a joke about {topic}: {joke}"
+        return joke</pre>
+
+<p>
+  That's it. ~30 lines. The whole skill. Let's break down what happens:
+</p>
+
+<ul style="margin: 12px 0 12px 24px; color: var(--muted);">
+  <li><code>name</code> — The LLM knows this skill as "JokeAgent"</li>
+  <li><code>metadata.description</code> — The LLM reads this to decide <em>when</em> to call it. This is the most important part — it's the card description.</li>
+  <li><code>metadata.parameters</code> — What inputs the skill accepts (optional topic here)</li>
+  <li><code>perform()</code> — The actual action. Must accept <code>**kwargs</code>. Returns a string.</li>
+</ul>
+
+<h2>How Auto-Discovery Works</h2>
+
+<p>
+  You don't need to register agents anywhere. The brainstem automatically
+  discovers any file matching <code>*_agent.py</code> in the agents directory.
+  Here's what happens on startup:
+</p>
+
+<div class="diagram">   🧠 Brainstem starts up
+    │
+    ├── Scans agents/ for *_agent.py files
+    │
+    ├── Imports each file
+    │   └── Finds classes extending BasicAgent
+    │
+    ├── Calls to_tool() on each agent
+    │   └── Converts metadata to OpenAI function schema
+    │
+    └── Registers tools with the LLM
+        └── Now the LLM knows about this skill
+            and will call it when appropriate</div>
+
+<p>
+  Drop a file in, restart, done. The rappter learned a new trick.
+</p>
+
+<h2>One File vs The World</h2>
+
+<p>
+  Here's why the one-file-one-skill pattern matters. Look at what other
+  platforms require to add a single capability:
+</p>
+
+<div class="compare">
+  <div class="compare-box old">
+    <h3>🔧 Other Platforms</h3>
+    <p>LangChain: Tool class + chain config + prompt template</p>
+    <p>CrewAI: Agent YAML + task YAML + crew config</p>
+    <p>AutoGen: Agent class + group chat config + orchestrator</p>
+    <p>Multiple files, multiple formats, framework lock-in</p>
+  </div>
+  <div class="compare-box new">
+    <h3>🦎 RAPP Brainstem</h3>
+    <p>One Python file</p>
+    <p>~30 lines</p>
+    <p>Drop in agents/, restart</p>
+    <p>No config. No YAML. No registration.</p>
+  </div>
+</div>
+
+<p>
+  And because each skill is one self-contained file, they're
+  <strong>tradeable like Pokémon cards</strong>:
+</p>
+
+<ul style="margin: 12px 0 12px 24px; color: var(--muted);">
+  <li><strong>Trade</strong> — Send the file to a friend. Their rappter learns it instantly.</li>
+  <li><strong>Collect</strong> — Build a library of skills from the community.</li>
+  <li><strong>Remix</strong> — Open it, read ~30 lines, change what it does.</li>
+  <li><strong>Share</strong> — Post it anywhere. No package manager needed.</li>
+</ul>
+
+<div class="callout insight">
+  <div class="callout-label">💡 Insight</div>
+  <p>
+    You didn't install a plugin. You didn't configure a framework. You
+    <strong>taught your rappter something new</strong>. One file, one skill.
+    Trade them like Pokémon cards. That's the difference between a plugin
+    ecosystem and a trading-card ecosystem. Plugins need a platform.
+    Cards just need two people.
+  </p>
+</div>
+
+<!-- ── TRY IT ── -->
+
+<h2>🔬 Try It</h2>
+
+<div class="callout try-it">
+  <div class="callout-label">🔬 Try It</div>
+  <p><strong>Step 1 — Create the agent file.</strong></p>
+  <p>Create a new file called <code>joke_agent.py</code> in your agents directory:</p>
+  <pre>import random
+from basic_agent import BasicAgent
+
+class JokeAgent(BasicAgent):
+    def __init__(self):
+        self.name = "JokeAgent"
+        self.metadata = {
+            "name": self.name,
+            "description": "Tells a random joke when asked.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+        super().__init__()
+
+    def perform(self, **kwargs):
+        jokes = [
+            "Why do programmers prefer dark mode? Light attracts bugs.",
+            "There are 10 kinds of people — those who understand binary and those who don't.",
+            "Why did the developer go broke? Used up all his cache.",
+        ]
+        return random.choice(jokes)</pre>
+
+  <p style="margin-top: 16px;"><strong>Step 2 — Restart the brainstem.</strong></p>
+  <pre>cd rapp_brainstem &amp;&amp; ./start.sh</pre>
+
+  <p style="margin-top: 16px;"><strong>Step 3 — Ask for a joke.</strong></p>
+  <p>In the chat UI, type:</p>
+  <pre>"Tell me a joke"</pre>
+  <p>Watch the brainstem automatically discover your new agent and use it.
+  You didn't tell it to use the JokeAgent — the LLM read the description
+  and decided on its own. That's the magic of good metadata.</p>
+
+  <p style="margin-top: 16px;"><strong>Step 4 — Check the tools list.</strong></p>
+  <pre>curl -s localhost:7071/health | python3 -m json.tool</pre>
+  <p>Look for your JokeAgent in the available tools. It's there because
+  the brainstem found the file, loaded the class, and registered it. Automatic.</p>
+</div>
+
+<!-- ── COMPLETE ── -->
+
+<div class="callout next">
+  <div class="callout-label">🪜 What's Next</div>
+  <p>
+    You taught your rappter its first trick. One file, one skill, automatic
+    discovery. From here, the path branches: teach it memory so it remembers
+    you across sessions, build agents that connect to real APIs, or share
+    your skills with other rappter owners. Your rappter is growing.
+    <strong>Where it goes next is up to you.</strong>
+  </p>
+  <button class="complete-btn" id="complete-btn" onclick="completeLesson()">
+    ✓ I taught it a trick — mark complete
+  </button>
+</div>
+
+<div class="footer">
+  <span>RappterAcademy — Hatchling Path</span>
+  <a href="../academy/">All Lessons →</a>
+</div>
+
+<script>
+  function completeLesson() {
+    if (window.opener && window.opener.rappterAcademy) {
+      window.opener.rappterAcademy.markComplete('05');
+    }
+    try {
+      const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+      if (!p['05']) { p['05'] = { completed: true, date: new Date().toISOString().slice(0,10) }; }
+      localStorage.setItem('rappteracademy_progress', JSON.stringify(p));
+    } catch {}
+    const btn = document.getElementById('complete-btn');
+    btn.textContent = '✓ Completed — 150 XP earned!';
+    btn.classList.add('done');
+  }
+  // Check if already done
+  try {
+    const p = JSON.parse(localStorage.getItem('rappteracademy_progress') || '{}');
+    if (p['05']) {
+      const btn = document.getElementById('complete-btn');
+      btn.textContent = '✓ Completed — 150 XP earned!';
+      btn.classList.add('done');
+    }
+  } catch {}
+</script>
+
+</body>
+</html>

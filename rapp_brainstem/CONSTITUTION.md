@@ -70,6 +70,29 @@ compose their own complexity from simple parts they fully understand.
 
 ---
 
+## Article III-b — One File, One Skill
+
+Every rappter skill is a **single `.py` file**. The whole skill.
+
+Name, description, parameters, action — all in one place. No config
+files. No dependency chains. No framework lock-in. No registration
+step. Drop the file in `agents/`, and the rappter learns it
+automatically.
+
+This makes skills **portable and tradeable** — like Pokémon cards:
+
+- **Trade** — Send a file to a friend. Their rappter learns it instantly.
+- **Collect** — Build a library of skills from the community.
+- **Remix** — Open it, read it (~30 lines), change what it does.
+- **Share** — Post it anywhere. No package manager needed.
+
+Other platforms require chains, configs, YAML, orchestration graphs.
+We require one file. That's the difference between a plugin ecosystem
+and a trading-card ecosystem. Plugins need a platform. Cards just
+need two people.
+
+---
+
 ## Article IV — The Device Is the Habitat
 
 Your rappter's device is its habitat. **All learned data lives on-device.**

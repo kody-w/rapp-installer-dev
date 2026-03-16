@@ -80,4 +80,10 @@ The content is open source. Fork it, translate it, remix it.
 
 ---
 
-*Built by the RAPP community. Governed by the [Constitution](../rapp_brainstem/CONSTITUTION.md).*
+*Built by the RAPP community. Governed by the [Constitution](../../rapp_brainstem/CONSTITUTION.md).*
+
+### Deeper Reading
+
+- [The Master Plan](../MASTER_PLAN.md) — The moonshot roadmap: Egg → Nest → Moon → Stars
+- [Engineering Field Notes](../field-notes/) — How and why we built it this way
+- [The Constitution](../../rapp_brainstem/CONSTITUTION.md) — The principles behind every decision
