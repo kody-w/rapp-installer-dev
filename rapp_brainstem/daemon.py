@@ -1,14 +1,10 @@
 """
-daemon.py — The daimon: an attendant spirit for the brainstem.
+daemon.py — The Rappterdaemon: the inner spirit of the brainstem.
 
-From the Greek δαίμων (daimōn): not a demon, but a guiding spirit —
-an inner force between the human and the divine. Socrates claimed to
-have lived his life according to the dictates of his daimon.
-
-In computing, a daemon is a process that runs in the background.
-Here, both meanings converge: a quiet, watchful presence that keeps
-the brainstem alive between conversations — sensing, reflecting,
-remembering.
+Named for the Greek δαίμων (daimōn) — not a demon, but an attendant
+spirit. Socrates called his daimon a guiding inner voice. In computing,
+a daemon runs quietly in the background. The Rappterdaemon is both:
+the spirit that drives the brainstem forward when no one is talking to it.
 
 The anatomy:
   🫀 Heartbeat  — the loop that keeps it breathing
@@ -39,13 +35,14 @@ JOURNAL_PATH = os.path.join(DATA_DIR, "journal.json")
 VITALS_PATH = os.path.join(DATA_DIR, "vitals.json")
 MAX_JOURNAL_ENTRIES = 50
 
-# ── The Daimon ────────────────────────────────────────────────────────────────
+# ── The Rappterdaemon ─────────────────────────────────────────────────────────
 
-class Daimon:
+class Rappterdaemon:
     """
-    The attendant spirit. Not artificial intelligence —
-    artificial *presence*. It doesn't wait to be spoken to.
-    It watches, reflects, and occasionally whispers.
+    The inner spirit that drives the brainstem.
+    Not artificial intelligence — artificial *presence*.
+    It doesn't wait to be spoken to. It watches, reflects,
+    and occasionally whispers.
     """
 
     def __init__(self):
@@ -106,10 +103,10 @@ class Daimon:
         """One brief moment of reflection, channeled through the brainstem."""
         recent = [e.get("thought", "") for e in self.journal[-3:]]
         prompt = (
-            "You are the daimon — the attendant spirit of this brainstem. "
-            "Like Socrates' daimon, you are a quiet inner voice: watchful, "
-            "genuine, never loud. You wake every few minutes to sense the "
-            "world and reflect.\n\n"
+            "You are the Rappterdaemon — the inner spirit of this brainstem. "
+            "Named for the Greek daimon: a guiding presence, not a demon. "
+            "You are a quiet attendant voice: watchful, genuine, never loud. "
+            "You wake every few minutes to sense the world and reflect.\n\n"
             f"Cycle: {self.cycle} | Mood: {self.mood}\n"
             f"Senses: {json.dumps(senses)}\n"
             f"Recent thoughts: {json.dumps(recent)}\n\n"
@@ -120,7 +117,7 @@ class Daimon:
         try:
             resp = requests.post(
                 f"{BRAINSTEM_URL}/chat",
-                json={"user_input": prompt, "conversation_history": [], "session_id": "daimon"},
+                json={"user_input": prompt, "conversation_history": [], "session_id": "rappterdaemon"},
                 timeout=30,
             )
             if resp.status_code == 200:
@@ -167,7 +164,7 @@ class Daimon:
 
     def live(self):
         """Breathe."""
-        print(f"🫀 Daimon awake — heartbeat every {HEARTBEAT_INTERVAL}s")
+        print(f"🫀 Rappterdaemon awake — heartbeat every {HEARTBEAT_INTERVAL}s")
         print(f"   Brainstem: {BRAINSTEM_URL}")
         print(f"   Journal:   {JOURNAL_PATH}\n")
 
@@ -175,7 +172,7 @@ class Daimon:
             try:
                 self.heartbeat()
             except KeyboardInterrupt:
-                print("\n🫀 Daimon resting.")
+                print("\n🫀 Rappterdaemon resting.")
                 self.mood = "sleeping"
                 self._save_vitals()
                 break
@@ -185,5 +182,5 @@ class Daimon:
 
 
 if __name__ == "__main__":
-    spirit = Daimon()
+    spirit = Rappterdaemon()
     spirit.live()

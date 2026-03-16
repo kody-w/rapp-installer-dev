@@ -26,11 +26,11 @@ if [ ! -f .env ]; then
     cp .env.example .env 2>/dev/null || true
 fi
 
-# Start the daimon (attendant spirit) in the background
+# Start the Rappterdaemon (inner spirit) in the background
 if [ -f daemon.py ]; then
     "$VENV_PYTHON" daemon.py &
     DAIMON_PID=$!
-    echo "🫀 Daimon started (pid $DAIMON_PID)"
+    echo "🫀 Rappterdaemon started (pid $DAIMON_PID)"
     trap "kill $DAIMON_PID 2>/dev/null" EXIT
 fi
 
