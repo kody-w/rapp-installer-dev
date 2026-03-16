@@ -605,13 +605,24 @@ def call_copilot(messages, tools=None):
     if resp.status_code != 200:
         error_detail = resp.text[:500] if resp.text else "No details"
         print(f"[brainstem] API error {resp.status_code} with model '{MODEL}': {error_detail}")
-        # If a non-default model fails, fall back to gpt-4o
-        if MODEL != "gpt-4o":
-            print(f"[brainstem] Retrying with gpt-4o...")
-            body["model"] = "gpt-4o"
-            if "tool_choice" not in body and tools:
-                body["tool_choice"] = "auto"
-            resp = requests.post(url, headers=headers, json=body, timeout=60)
+        # On 429/5xx, cycle through other available models before giving up
+        if resp.status_code in (429, 500, 502, 503):
+            tried = {MODEL}
+            fallback_ids = [m["id"] for m in AVAILABLE_MODELS if m["id"] != MODEL]
+            for fallback_model in fallback_ids:
+                if fallback_model in tried:
+                    continue
+                tried.add(fallback_model)
+                print(f"[brainstem] Retrying with {fallback_model}...")
+                body["model"] = fallback_model
+                if fallback_model in _NO_TOOL_CHOICE_MODELS:
+                    body.pop("tool_choice", None)
+                elif tools and "tool_choice" not in body:
+                    body["tool_choice"] = "auto"
+                resp = requests.post(url, headers=headers, json=body, timeout=60)
+                if resp.status_code == 200:
+                    break
+                print(f"[brainstem] {fallback_model} also failed ({resp.status_code})")
     resp.raise_for_status()
     result = resp.json()
 
@@ -753,7 +764,7 @@ def chat():
         traceback.print_exc()
         status = e.response.status_code if e.response is not None else 502
         return jsonify({
-            "error": f"Model '{MODEL}' returned {status}. Try switching to gpt-4o.",
+            "error": f"Model '{MODEL}' returned {status}. All fallback models also failed — try again shortly or switch models.",
             "model": MODEL,
             "detail": str(e)[:300]
         }), 502
