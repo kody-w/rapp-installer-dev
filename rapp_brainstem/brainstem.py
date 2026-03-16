@@ -674,8 +674,7 @@ def run_tool_calls(tool_calls, agents, session_id=None):
         if agent:
             try:
                 result = agent.perform(**args)
-                log_preview = result if len(str(result)) <= 500 else str(result)[:500] + '… (truncated)'
-                logs.append(f"[{fn_name}] {log_preview}")
+                logs.append(f"[{fn_name}] {result}")
             except Exception as e:
                 result = f"Error: {e}"
                 logs.append(f"[{fn_name}] ERROR: {e}")
