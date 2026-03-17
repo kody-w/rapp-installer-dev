@@ -64,47 +64,6 @@
     0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
   }
 
-  /* ── Heartbeat / Vitals ── */
-  @keyframes heartbeat {
-    0%, 100% { transform: scale(1); opacity: 0.6; }
-    15% { transform: scale(1.3); opacity: 1; }
-    30% { transform: scale(1); opacity: 0.6; }
-    45% { transform: scale(1.15); opacity: 0.9; }
-    60% { transform: scale(1); opacity: 0.6; }
-  }
-  .heart-btn {
-    background: none; border: none; cursor: pointer;
-    font-size: 14px; padding: 2px 4px; line-height: 1;
-    position: relative;
-  }
-  .heart-btn.alive { animation: heartbeat 1.8s ease-in-out infinite; }
-  .heart-btn.offline { opacity: 0.3; animation: none; }
-
-  #vitals-panel {
-    display: none; position: absolute; top: 52px; right: 80px;
-    background: #161b22; border: 1px solid #30363d;
-    border-radius: 10px; padding: 16px 20px; z-index: 50;
-    min-width: 280px; max-width: 340px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    font-size: 13px; line-height: 1.5;
-  }
-  #vitals-panel.open { display: block; }
-  #vitals-panel h3 { font-size: 13px; color: #e6edf3; margin: 0 0 8px; }
-  .vitals-row { display: flex; justify-content: space-between; padding: 3px 0; color: #8b949e; }
-  .vitals-row .label { color: #8b949e; }
-  .vitals-row .value { color: #e6edf3; font-weight: 500; }
-  .vitals-mood { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .vitals-mood.aware { background: rgba(88,166,255,0.15); color: #58a6ff; }
-  .vitals-mood.resting { background: rgba(63,185,80,0.15); color: #3fb950; }
-  .vitals-mood.waiting { background: rgba(210,153,34,0.15); color: #d29922; }
-  .vitals-mood.offline { background: rgba(248,81,73,0.15); color: #f85149; }
-  .vitals-mood.waking { background: rgba(188,143,243,0.15); color: #bc8ff3; }
-
-  .journal-entry { border-top: 1px solid #21262d; padding: 8px 0 4px; margin-top: 6px; }
-  .journal-entry:first-child { border-top: none; margin-top: 0; }
-  .journal-time { font-size: 11px; color: #484f58; }
-  .journal-thought { color: #c9d1d9; font-size: 12px; margin-top: 2px; }
-
   .icon-btn {
     background: none;
     border: 1px solid #30363d;
@@ -518,16 +477,6 @@
       </div>
     </div>
     <a class="icon-btn" href="vscode://file/$HOME/.brainstem/src/rapp_brainstem" id="vscode-link" title="Open in VS Code">
-      <span class="icon"><svg viewBox="0 0 16 16"><path d="M14.85 3.22l-3.07-1.56a.75.75 0 00-.82.12L5.8 6.56 3.16 4.58a.5.5 0 00-.64.05l-.86.74a.5.5 0 00-.004.72L3.87 8l-2.22 1.92a.5.5 0 00.003.72l.86.74a.5.5 0 00.64.05L5.8 9.44l5.16 4.78a.75.75 0 00.82.12l3.07-1.56a.75.75 0 00.42-.67V3.89a.75.75 0 00-.42-.67zM11 10.93L7.3 8 11 5.07v5.86z"/></svg></span>
-    </a>
-    <button class="heart-btn offline" id="heart-btn" onclick="toggleVitals()" title="Daemon vitals">🫀</button>
-    <div id="vitals-panel">
-      <h3>🫀 Heartbeat <span class="vitals-mood offline" id="vitals-mood">offline</span></h3>
-      <div class="vitals-row"><span class="label">Cycle</span><span class="value" id="vitals-cycle">—</span></div>
-      <div class="vitals-row"><span class="label">Since</span><span class="value" id="vitals-boot">—</span></div>
-      <div id="vitals-thought" style="margin-top:10px; color:#c9d1d9; font-style:italic; font-size:12px; display:none;"></div>
-      <div id="vitals-journal" style="margin-top:12px;"></div>
-    </div>
   </div>
 </header>
 
@@ -639,64 +588,6 @@
   }
   checkHealth();
   setInterval(checkHealth, 30000);
-
-  // ── Daimon vitals ──
-  function toggleVitals() {
-    document.getElementById('vitals-panel').classList.toggle('open');
-    if (document.getElementById('vitals-panel').classList.contains('open')) pollVitals();
-  }
-  // Close vitals panel when clicking outside
-  document.addEventListener('click', (e) => {
-    const panel = document.getElementById('vitals-panel');
-    const btn = document.getElementById('heart-btn');
-    if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) {
-      panel.classList.remove('open');
-    }
-  });
-  async function pollVitals() {
-    try {
-      const r = await fetch(`${API}/vitals`);
-      const d = await r.json();
-      const v = d.vitals || {};
-      const heartBtn = document.getElementById('heart-btn');
-      const moodEl = document.getElementById('vitals-mood');
-      const alive = v.alive === true;
-
-      heartBtn.className = 'heart-btn ' + (alive ? 'alive' : 'offline');
-      const mood = v.mood || 'offline';
-      moodEl.textContent = mood;
-      moodEl.className = 'vitals-mood ' + mood;
-
-      document.getElementById('vitals-cycle').textContent = v.cycle || '—';
-      if (v.boot_time) {
-        const boot = new Date(v.boot_time);
-        const mins = Math.round((Date.now() - boot.getTime()) / 60000);
-        document.getElementById('vitals-boot').textContent = mins < 60 ? `${mins}m ago` : `${Math.round(mins/60)}h ago`;
-      }
-
-      const thoughtEl = document.getElementById('vitals-thought');
-      if (v.last_thought) {
-        thoughtEl.textContent = `"${v.last_thought}"`;
-        thoughtEl.style.display = 'block';
-      } else {
-        thoughtEl.style.display = 'none';
-      }
-
-      const journalEl = document.getElementById('vitals-journal');
-      const entries = (d.journal || []).slice(-5).reverse();
-      if (entries.length) {
-        journalEl.innerHTML = entries.map(e =>
-          `<div class="journal-entry"><span class="journal-time">${e.time || ''}</span><div class="journal-thought">${(e.thought || '').replace(/</g,'&lt;').slice(0,200)}</div></div>`
-        ).join('');
-      } else {
-        journalEl.innerHTML = '<div style="color:#484f58;font-size:12px;margin-top:8px;">No journal entries yet — start the daemon to begin.</div>';
-      }
-    } catch {
-      document.getElementById('heart-btn').className = 'heart-btn offline';
-    }
-  }
-  pollVitals();
-  setInterval(pollVitals, 15000);
 
   async function copyDeviceCode() {
     const code = document.getElementById('device-code').textContent;
