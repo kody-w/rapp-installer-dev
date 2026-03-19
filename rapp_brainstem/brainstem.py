@@ -950,6 +950,90 @@ def version():
     """Return the current brainstem version."""
     return jsonify({"version": VERSION})
 
+@app.route("/agents", methods=["GET"])
+def list_agents_files():
+    """List all agent .py files available with their loaded agent names."""
+    files = glob.glob(os.path.join(AGENTS_PATH, "*.py"))
+    results = []
+    for f in files:
+        filename = os.path.basename(f)
+        if filename.startswith("__") or not filename.endswith(".py"):
+            continue
+        try:
+            # We don't want to re-download pip packages or run arbitrary init unnecessarily,
+            # but if it's already synthetically loaded or safe to parse, _load_agent_from_file is okay.
+            loaded = _load_agent_from_file(f)
+            agent_names = list(loaded.keys())
+        except Exception:
+            agent_names = []
+            
+        results.append({
+            "filename": filename,
+            "agents": agent_names
+        })
+        
+    return jsonify({"files": results})
+
+@app.route("/agents/export/<filename>", methods=["GET"])
+def agents_export(filename):
+    """Export an agent .py file."""
+    from flask import send_file
+    import werkzeug.utils
+    safe_name = werkzeug.utils.secure_filename(filename)
+    if not safe_name.endswith('.py'):
+        safe_name += '.py'
+    filepath = os.path.join(AGENTS_PATH, safe_name)
+    if os.path.exists(filepath):
+        return send_file(filepath, as_attachment=True)
+    return jsonify({"error": "Agent not found"}), 404
+
+@app.route("/agents/<filename>", methods=["DELETE"])
+def agents_delete(filename):
+    """Delete an agent .py file."""
+    import werkzeug.utils
+    safe_name = werkzeug.utils.secure_filename(filename)
+    if not safe_name.endswith('.py'):
+        safe_name += '.py'
+    filepath = os.path.join(AGENTS_PATH, safe_name)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+        # Reload agents so memory drops it
+        try:
+            load_agents()
+        except Exception:
+            pass
+        return jsonify({"status": "ok", "message": f"Agent {safe_name} deleted."})
+    return jsonify({"error": "Agent not found"}), 404
+
+@app.route("/agents/import", methods=["POST"])
+def agents_import():
+    """Import an agent .py file via drag & drop."""
+    import werkzeug.utils
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    f = request.files['file']
+    if f.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if not f.filename.endswith('.py'):
+        return jsonify({"error": "Only .py files are supported"}), 400
+    
+    os.makedirs(AGENTS_PATH, exist_ok=True)
+    safe_name = werkzeug.utils.secure_filename(f.filename)
+    # Ensure it matches the glob pattern *_agent.py
+    if not safe_name.endswith('_agent.py'):
+        safe_name = safe_name[:-3] + '_agent.py'
+        
+    filepath = os.path.join(AGENTS_PATH, safe_name)
+    f.save(filepath)
+    
+    # Reload agents to include the new one
+    try:
+        load_agents()
+    except Exception as e:
+        return jsonify({"error": f"Uploaded but failed to load: {e}"}), 500
+        
+    return jsonify({"status": "ok", "message": f"Agent {safe_name} imported successfully."})
+
 @app.route("/health", methods=["GET"])
 def health():
     agents = {}
