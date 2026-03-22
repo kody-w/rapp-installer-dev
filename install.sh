@@ -237,12 +237,66 @@ install_brainstem() {
     echo "Installing RAPP Brainstem..."
     mkdir -p "$BRAINSTEM_HOME"
 
+    local AGENTS_DIR="$BRAINSTEM_HOME/src/rapp_brainstem/agents"
+    local SOUL_FILE="$BRAINSTEM_HOME/src/rapp_brainstem/soul.md"
+    local ENV_FILE="$BRAINSTEM_HOME/src/rapp_brainstem/.env"
+    local LOCAL_VERSION_FILE="$BRAINSTEM_HOME/src/rapp_brainstem/VERSION"
+
     if [ -d "$BRAINSTEM_HOME/src/.git" ]; then
-        echo "  Updating existing installation..."
-        cd "$BRAINSTEM_HOME/src"
-        git pull --quiet 2>/dev/null || echo -e "  ${YELLOW}Warning: Could not update${NC}"
+        # ── SMART UPDATE: preserve local files, upgrade framework ──
+        local LOCAL_VER="0.0.0"
+        [ -f "$LOCAL_VERSION_FILE" ] && LOCAL_VER=$(cat "$LOCAL_VERSION_FILE" 2>/dev/null || echo "0.0.0")
+        local REMOTE_VER=$(curl -sf "$REMOTE_VERSION_URL" 2>/dev/null || echo "0.0.0")
+
+        echo "  Local:  v${LOCAL_VER}"
+        echo "  Remote: v${REMOTE_VER}"
+
+        if [ "$LOCAL_VER" = "$REMOTE_VER" ]; then
+            echo -e "  ${GREEN}✓${NC} Already up to date (v${LOCAL_VER})"
+        else
+            echo "  Upgrading v${LOCAL_VER} → v${REMOTE_VER}..."
+
+            # 1. Backup user's local files (soul, custom agents, .env)
+            local BACKUP="/tmp/brainstem-upgrade-$$"
+            mkdir -p "$BACKUP"
+            [ -f "$SOUL_FILE" ] && cp "$SOUL_FILE" "$BACKUP/soul.md"
+            [ -f "$ENV_FILE" ] && cp "$ENV_FILE" "$BACKUP/.env"
+            if [ -d "$AGENTS_DIR" ]; then
+                mkdir -p "$BACKUP/agents"
+                # Backup ALL agents — user-created ones will be restored
+                cp "$AGENTS_DIR"/*.py "$BACKUP/agents/" 2>/dev/null || true
+            fi
+            echo -e "  ${GREEN}✓${NC} Backed up soul, agents, config"
+
+            # 2. Pull latest from GitHub
+            cd "$BRAINSTEM_HOME/src"
+            git stash --quiet 2>/dev/null || true
+            git pull --quiet 2>/dev/null || echo -e "  ${YELLOW}Warning: Could not pull${NC}"
+            echo -e "  ${GREEN}✓${NC} Framework updated"
+
+            # 3. Restore user's local files (merge, don't overwrite)
+            [ -f "$BACKUP/soul.md" ] && cp "$BACKUP/soul.md" "$SOUL_FILE"
+            [ -f "$BACKUP/.env" ] && cp "$BACKUP/.env" "$ENV_FILE"
+            if [ -d "$BACKUP/agents" ]; then
+                # Restore user agents that aren't in the repo (custom ones)
+                for agent_file in "$BACKUP/agents"/*.py; do
+                    local fname=$(basename "$agent_file")
+                    # Skip core agents that the repo manages
+                    case "$fname" in
+                        basic_agent.py|__init__.py) continue ;;
+                    esac
+                    # If user has a custom agent, keep it
+                    cp "$agent_file" "$AGENTS_DIR/$fname"
+                done
+                echo -e "  ${GREEN}✓${NC} Restored custom agents + soul + config"
+            fi
+
+            # 4. Clean up backup
+            rm -rf "$BACKUP"
+            echo -e "  ${GREEN}✓${NC} Upgrade complete: v${LOCAL_VER} → v${REMOTE_VER}"
+        fi
     else
-        echo "  Cloning repository..."
+        echo "  Fresh install — cloning repository..."
         rm -rf "$BRAINSTEM_HOME/src" 2>/dev/null || true
         git clone --quiet "$REPO_URL" "$BRAINSTEM_HOME/src"
     fi

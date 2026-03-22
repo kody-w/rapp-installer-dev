@@ -216,10 +216,49 @@ function Install-Brainstem {
     }
 
     if (Test-Path "$BRAINSTEM_HOME\src\.git") {
-        Write-Host "  Updating existing installation..."
-        Push-Location "$BRAINSTEM_HOME\src"
-        try { git pull --quiet 2>&1 | Out-Null } catch {}
-        Pop-Location
+        # Smart update — preserve soul, agents, config
+        $LocalVer = "0.0.0"
+        $VerFile = "$BRAINSTEM_HOME\src\rapp_brainstem\VERSION"
+        if (Test-Path $VerFile) { $LocalVer = (Get-Content $VerFile -Raw).Trim() }
+        try { $RemoteVer = (Invoke-WebRequest -Uri $REMOTE_VERSION_URL -UseBasicParsing -TimeoutSec 5).Content.Trim() } catch { $RemoteVer = "0.0.0" }
+
+        Write-Host "  Local:  v$LocalVer"
+        Write-Host "  Remote: v$RemoteVer"
+
+        if ($LocalVer -eq $RemoteVer) {
+            Write-Host "  [OK] Already up to date (v$LocalVer)" -ForegroundColor Green
+        } else {
+            Write-Host "  Upgrading v$LocalVer -> v$RemoteVer..."
+            $Backup = "$env:TEMP\brainstem-upgrade-$(Get-Random)"
+            New-Item -ItemType Directory -Force -Path $Backup | Out-Null
+
+            # Backup user files
+            $AgentsDir = "$BRAINSTEM_HOME\src\rapp_brainstem\agents"
+            $SoulFile = "$BRAINSTEM_HOME\src\rapp_brainstem\soul.md"
+            $EnvFile = "$BRAINSTEM_HOME\src\rapp_brainstem\.env"
+            if (Test-Path $SoulFile) { Copy-Item $SoulFile "$Backup\soul.md" }
+            if (Test-Path $EnvFile) { Copy-Item $EnvFile "$Backup\.env" }
+            if (Test-Path $AgentsDir) { Copy-Item "$AgentsDir\*.py" "$Backup\" -ErrorAction SilentlyContinue }
+            Write-Host "  [OK] Backed up soul, agents, config" -ForegroundColor Green
+
+            # Pull latest
+            Push-Location "$BRAINSTEM_HOME\src"
+            try { git stash --quiet 2>&1 | Out-Null } catch {}
+            try { git pull --quiet 2>&1 | Out-Null } catch {}
+            Pop-Location
+            Write-Host "  [OK] Framework updated" -ForegroundColor Green
+
+            # Restore user files
+            if (Test-Path "$Backup\soul.md") { Copy-Item "$Backup\soul.md" $SoulFile -Force }
+            if (Test-Path "$Backup\.env") { Copy-Item "$Backup\.env" $EnvFile -Force }
+            Get-ChildItem "$Backup\*.py" -ErrorAction SilentlyContinue | ForEach-Object {
+                if ($_.Name -notin @("basic_agent.py", "__init__.py")) {
+                    Copy-Item $_.FullName "$AgentsDir\$($_.Name)" -Force
+                }
+            }
+            Remove-Item -Recurse -Force $Backup -ErrorAction SilentlyContinue
+            Write-Host "  [OK] Upgrade complete: v$LocalVer -> v$RemoteVer" -ForegroundColor Green
+        }
     } else {
         if (Test-Path "$BRAINSTEM_HOME\src") {
             Remove-Item -Recurse -Force "$BRAINSTEM_HOME\src" -ErrorAction SilentlyContinue
