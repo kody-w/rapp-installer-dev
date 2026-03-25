@@ -133,7 +133,34 @@ GitHub. The user's brainstem is their brainstem.
 
 ---
 
-## Article VIII — Amendments
+## Article VIII — Universal Platform Gateway
+
+The `rapp-installer` repo is the **single entry point** for the entire RAPP platform. Users start where they want — not where we tell them to.
+
+### Two One-Liners, One Platform
+
+| Path | What It Creates | One-Liner |
+|------|----------------|-----------|
+| **Brainstem** (Tier 1) | Local Flask AI server at `~/.brainstem/` | `curl -fsSL .../install.sh \| bash` |
+| **Hippocampus** (Tier 2) | Azure Functions project at `~/rapp-projects/{name}/` | `curl -fsSL .../community_rapp/install.sh \| bash` |
+
+Both paths are self-contained. Neither depends on the other. A user who starts with the Hippocampus never needs the Brainstem, and vice versa.
+
+### Rules
+
+1. **The brainstem installer stays untouched.** `install.sh` and `install.ps1` at the repo root are the brainstem's sacred one-liners. The Hippocampus installer lives in `community_rapp/` — a parallel path, not a modification of the existing one.
+
+2. **No cross-contamination.** The brainstem install never pulls CommunityRAPP code. The Hippocampus install never pulls brainstem code. They share a repo for discoverability, not for dependency.
+
+3. **Users choose their entry point.** The README and landing page present both paths equally. We never push users from one tier to another — they move when they're ready.
+
+4. **Each path works on a fresh machine.** Prerequisites (Python, Git, Azure Functions Core Tools) are auto-installed. No prior setup assumed.
+
+5. **The Hippocampus is public.** CommunityRAPP is an open-source repo. The Hippocampus installer uses `git clone` (not `gh clone`). No GitHub authentication is required to create a project.
+
+---
+
+## Article IX — Amendments
 
 This constitution can be amended. The only rule: the change must serve
 the platform's purpose as a business-focused AI agent engine. If it

@@ -1,133 +1,221 @@
 #!/bin/bash
-# CommunityRAPP — One-line installer
+# CommunityRAPP — One-line installer (Hippocampus / Tier 2)
 # Usage: curl -fsSL https://raw.githubusercontent.com/kody-w/rapp-installer/main/community_rapp/install.sh | bash
 #
-# Requires: GitHub CLI (gh) authenticated with access to kody-w/CommunityRAPP
+# Creates a ready-to-run CommunityRAPP project with persistent memory,
+# auto-discovered agents, and GitHub Copilot device-code auth through the UI.
+# No API keys, no Azure account, no cloud services needed to start.
 
 set -e
+
 RED="\033[0;31m" GREEN="\033[0;32m" YELLOW="\033[1;33m" BLUE="\033[0;34m" NC="\033[0m"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  CommunityRAPP — Local Setup${NC}"
+echo -e "${BLUE}  RAPP Hippocampus — Local Setup${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-# ── Prerequisites ────────────────────────────────────────────
-echo -e "${YELLOW}Checking prerequisites...${NC}"
+# ── Helpers ─────────────────────────────────────────────────
 
-# GitHub CLI
-if ! command -v gh &>/dev/null; then
-    echo -e "${YELLOW}Installing GitHub CLI...${NC}"
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        brew install gh 2>/dev/null || { echo -e "${RED}Install Homebrew first: https://brew.sh${NC}"; exit 1; }
-    else
-        (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
-        && sudo mkdir -p -m 755 /etc/apt/keyrings \
-        && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-        && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-        && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli-stable.list > /dev/null \
-        && sudo apt update && sudo apt install gh -y
-    fi
-fi
-echo -e "${GREEN}[OK] GitHub CLI${NC}"
+die() { echo -e "${RED}ERROR: $1${NC}" >&2; exit 1; }
 
-# Check gh auth
-if ! gh auth status &>/dev/null 2>&1; then
-    echo -e "${YELLOW}Not logged into GitHub CLI. Running: gh auth login${NC}"
-    gh auth login
-fi
-GH_USER=$(gh api user --jq '.login' 2>/dev/null)
-echo -e "${GREEN}[OK] Authenticated as @${GH_USER}${NC}"
-
-# Check repo access
-if ! gh api repos/kody-w/CommunityRAPP --jq '.name' &>/dev/null 2>&1; then
-    echo -e "${RED}[X] No access to kody-w/CommunityRAPP${NC}"
-    echo -e "${RED}    Request contributor access from a repo maintainer.${NC}"
-    exit 1
-fi
-echo -e "${GREEN}[OK] Repo access confirmed${NC}"
-
-# Python 3.11
-find_python311() {
-    for cmd in python3.11 python311; do
-        if command -v $cmd &>/dev/null; then
-            ver=$($cmd --version 2>&1)
-            [[ $ver == *"3.11"* ]] && echo $cmd && return 0
+find_python() {
+    for cmd in python3.11 python3.12 python3; do
+        if command -v "$cmd" &>/dev/null; then
+            local ver
+            ver=$("$cmd" --version 2>&1 | awk '{print $2}')
+            local major minor
+            major=$(echo "$ver" | cut -d. -f1)
+            minor=$(echo "$ver" | cut -d. -f2)
+            if [ "$major" = "3" ] && [ "$minor" -ge 11 ] && [ "$minor" -le 12 ]; then
+                echo "$cmd"
+                return 0
+            fi
         fi
     done
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        for p in /opt/homebrew/bin/python3.11 /usr/local/bin/python3.11; do
-            [[ -x $p ]] && echo $p && return 0
-        done
-    fi
     return 1
 }
 
-PYTHON_CMD=$(find_python311) || {
-    echo -e "${YELLOW}Installing Python 3.11...${NC}"
-    if [[ "$OSTYPE" == "darwin"* ]]; then brew install python@3.11; else sudo apt-get update && sudo apt-get install -y python3.11 python3.11-venv; fi
-    PYTHON_CMD=$(find_python311) || { echo -e "${RED}Failed to install Python 3.11${NC}"; exit 1; }
+# ── Prerequisites ───────────────────────────────────────────
+echo -e "${YELLOW}Checking prerequisites...${NC}"
+
+# Git
+command -v git &>/dev/null || die "Git is required. Install from https://git-scm.com"
+echo -e "${GREEN}[OK] Git${NC}"
+
+# Python
+PYTHON_CMD=$(find_python) || {
+    echo -e "${YELLOW}Python 3.11+ required (3.13+ not supported). Attempting install...${NC}"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        brew install python@3.11 2>/dev/null || die "Install Python 3.11 via Homebrew: brew install python@3.11"
+    else
+        sudo apt-get update -qq && sudo apt-get install -y -qq python3.11 python3.11-venv 2>/dev/null || \
+        die "Install Python 3.11: https://python.org/downloads/"
+    fi
+    PYTHON_CMD=$(find_python) || die "Python 3.11-3.12 required. Install from https://python.org"
 }
-echo -e "${GREEN}[OK] Python 3.11: $PYTHON_CMD${NC}"
+echo -e "${GREEN}[OK] $PYTHON_CMD ($($PYTHON_CMD --version 2>&1))${NC}"
 
 # Azure Functions Core Tools
 if ! command -v func &>/dev/null; then
     echo -e "${YELLOW}Installing Azure Functions Core Tools...${NC}"
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        brew tap azure/functions && brew install azure-functions-core-tools@4
+        brew tap azure/functions 2>/dev/null && brew install azure-functions-core-tools@4 2>/dev/null || \
+        die "Install Azure Functions Core Tools: brew tap azure/functions && brew install azure-functions-core-tools@4"
     else
-        npm install -g azure-functions-core-tools@4 2>/dev/null || {
-            echo -e "${YELLOW}npm not found, installing via apt...${NC}"
-            curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-            npm install -g azure-functions-core-tools@4
-        }
+        if command -v npm &>/dev/null; then
+            npm install -g azure-functions-core-tools@4 2>/dev/null || \
+            die "Install Azure Functions Core Tools: npm install -g azure-functions-core-tools@4"
+        else
+            die "Install Node.js and Azure Functions Core Tools: https://learn.microsoft.com/azure/azure-functions/functions-run-local"
+        fi
     fi
 fi
 echo -e "${GREEN}[OK] Azure Functions Core Tools${NC}"
 
-# ── Clone & Setup ────────────────────────────────────────────
-echo ""
-echo -e "${YELLOW}Cloning CommunityRAPP...${NC}"
-if [ -d "CommunityRAPP" ]; then
-    cd CommunityRAPP && git pull
-else
-    gh repo clone kody-w/CommunityRAPP && cd CommunityRAPP
-fi
-echo -e "${GREEN}[OK] Repository cloned${NC}"
+# ── Project name ────────────────────────────────────────────
 
-echo -e "${YELLOW}Setting up Python environment...${NC}"
-[ -d ".venv" ] && rm -rf .venv
-$PYTHON_CMD -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip -q && pip install -r requirements.txt -q
+PROJECT_NAME="${1:-}"
+if [ -z "$PROJECT_NAME" ]; then
+    echo ""
+    printf "Project name (e.g. my-project): "
+    read -r PROJECT_NAME
+    [ -z "$PROJECT_NAME" ] && die "Project name is required."
+fi
+
+if ! echo "$PROJECT_NAME" | grep -qE '^[a-z0-9][a-z0-9-]*$'; then
+    die "Invalid name '$PROJECT_NAME'. Use lowercase letters, numbers, and hyphens."
+fi
+
+PROJECTS_DIR="${RAPP_PROJECTS_DIR:-$HOME/rapp-projects}"
+PROJECT_DIR="$PROJECTS_DIR/$PROJECT_NAME"
+
+[ -d "$PROJECT_DIR" ] && die "Project '$PROJECT_NAME' already exists at $PROJECT_DIR"
+
+# ── Clone ───────────────────────────────────────────────────
+echo ""
+echo -e "${YELLOW}Creating project '$PROJECT_NAME'...${NC}"
+
+mkdir -p "$PROJECTS_DIR"
+
+echo -e "${YELLOW}Cloning CommunityRAPP...${NC}"
+git clone --depth 1 --quiet https://github.com/kody-w/CommunityRAPP.git "$PROJECT_DIR"
+echo -e "${GREEN}[OK] Cloned${NC}"
+
+# ── Venv + deps ─────────────────────────────────────────────
+echo -e "${YELLOW}Creating virtual environment...${NC}"
+"$PYTHON_CMD" -m venv "$PROJECT_DIR/.venv"
+
+echo -e "${YELLOW}Installing dependencies...${NC}"
+"$PROJECT_DIR/.venv/bin/pip" install -r "$PROJECT_DIR/requirements.txt" --quiet 2>/dev/null
 echo -e "${GREEN}[OK] Dependencies installed${NC}"
 
-# ── Config ───────────────────────────────────────────────────
-if [ ! -f "local.settings.json" ]; then
-    echo ""
-    echo -e "${YELLOW}No local.settings.json found.${NC}"
-    echo -e "Two options:"
-    echo -e "  1. Deploy to Azure first: click the Deploy button in README.md"
-    echo -e "     Then copy the setup script from the Outputs tab."
-    echo -e "  2. Copy the template and fill in your Azure values:"
-    echo -e "     cp local.settings.template.json local.settings.json"
-    echo ""
+# ── Settings ────────────────────────────────────────────────
+if [ -f "$PROJECT_DIR/local.settings.template.json" ]; then
+    cp "$PROJECT_DIR/local.settings.template.json" "$PROJECT_DIR/local.settings.json"
 fi
 
-# ── Done ─────────────────────────────────────────────────────
+# ── Port + start script ────────────────────────────────────
+BASE_PORT=7072
+PORT=$BASE_PORT
+
+if [ -f "$PROJECTS_DIR/.hatchery.json" ]; then
+    max=$(grep -o '"port": [0-9]*' "$PROJECTS_DIR/.hatchery.json" 2>/dev/null | awk '{print $2}' | sort -n | tail -1)
+    if [ -n "$max" ] && [ "$max" -ge "$PORT" ]; then
+        PORT=$((max + 1))
+    fi
+fi
+
+cat > "$PROJECT_DIR/start.sh" << EOF
+#!/usr/bin/env bash
+cd "\$(dirname "\$0")"
+source .venv/bin/activate
+func start --port $PORT
+EOF
+chmod +x "$PROJECT_DIR/start.sh"
+
+cat > "$PROJECT_DIR/start.ps1" << EOF
+\$ErrorActionPreference = 'Stop'
+Set-Location \$PSScriptRoot
+.venv\\Scripts\\Activate.ps1
+func start --port $PORT
+EOF
+
+# Inject port into chat UI
+if [ -f "$PROJECT_DIR/index.html" ]; then
+    sed -i '' "s|</head>|<script>window.__RAPP_PORT__='${PORT}';</script></head>|" "$PROJECT_DIR/index.html" 2>/dev/null || \
+    sed -i "s|</head>|<script>window.__RAPP_PORT__='${PORT}';</script></head>|" "$PROJECT_DIR/index.html" 2>/dev/null || true
+fi
+
+# Remove hatchery/ (it's for brainstem distribution, not the running project)
+rm -rf "$PROJECT_DIR/hatchery" 2>/dev/null || true
+
+# ── Business Mode UI (first hatch deploys it) ──────────────
+BIZ_HTML="$PROJECTS_DIR/business.html"
+if [ ! -f "$BIZ_HTML" ]; then
+    curl -fsSL "https://raw.githubusercontent.com/kody-w/CommunityRAPP/main/business.html" -o "$BIZ_HTML" 2>/dev/null || true
+fi
+
+# ── Update manifest ─────────────────────────────────────────
+MANIFEST="$PROJECTS_DIR/.hatchery.json"
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+if [ -f "$MANIFEST" ]; then
+    "$PYTHON_CMD" -c "
+import json
+with open('$MANIFEST', 'r') as f:
+    data = json.load(f)
+data.setdefault('projects', {})['$PROJECT_NAME'] = {
+    'path': '$PROJECT_DIR',
+    'port': $PORT,
+    'created_at': '$TIMESTAMP',
+    'python': '$PYTHON_CMD'
+}
+with open('$MANIFEST', 'w') as f:
+    json.dump(data, f, indent=2)
+"
+else
+    cat > "$MANIFEST" << EOF
+{
+  "projects": {
+    "$PROJECT_NAME": {
+      "path": "$PROJECT_DIR",
+      "port": $PORT,
+      "created_at": "$TIMESTAMP",
+      "python": "$PYTHON_CMD"
+    }
+  }
+}
+EOF
+fi
+
+# ── Done ────────────────────────────────────────────────────
+echo ""
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  CommunityRAPP is ready!${NC}"
+echo -e "${GREEN}  Project '$PROJECT_NAME' is ready!${NC}"
 echo -e "${GREEN}========================================${NC}"
+echo ""
+echo "  Location:  $PROJECT_DIR"
+echo "  Port:      $PORT"
+echo "  Python:    $PYTHON_CMD"
 echo ""
 echo "Next steps:"
-echo "  cd CommunityRAPP"
-echo "  source .venv/bin/activate"
 echo ""
-echo "  # If you have local.settings.json configured:"
-echo "  func start"
+echo "  1. Start it:"
+echo "     cd $PROJECT_DIR && ./start.sh"
 echo ""
-echo "  # If not, deploy to Azure first:"
-echo "  # Click the Deploy to Azure button in README.md"
+echo "  2. Open the chat UI:"
+echo "     open $PROJECT_DIR/index.html"
+echo ""
+echo "  3. Send a message — the UI walks you through GitHub auth."
+echo "     No API keys needed."
+echo ""
+if [ -f "$BIZ_HTML" ]; then
+echo "  4. Business Mode (multi-instance side-by-side):"
+echo "     open $BIZ_HTML"
+echo ""
+fi
+echo "  When you're ready for Azure:"
+echo "     Edit $PROJECT_DIR/local.settings.json"
+echo "     Then: func azure functionapp publish YOUR_APP --build remote"
 echo ""
