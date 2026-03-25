@@ -230,7 +230,7 @@
 <div class="tiers">
 
   <!-- TIER 1: BRAINSTEM -->
-  <div class="tier open" onclick="toggleTier(event, this)">
+  <div class="tier open" id="brainstem" onclick="toggleTier(event, this)">
     <div class="tier-header">
       <div class="tier-icon">🧠</div>
       <div class="tier-title">
@@ -266,8 +266,8 @@
     </div>
   </div>
 
-  <!-- TIER 2: AZURE -->
-  <div class="tier" onclick="toggleTier(event, this)">
+  <!-- TIER 2: HIPPOCAMPUS -->
+  <div class="tier" id="hippocampus" onclick="toggleTier(event, this)">
     <div class="tier-header">
       <div class="tier-icon">☁️</div>
       <div class="tier-title">
@@ -310,7 +310,7 @@
   </div>
 
   <!-- TIER 3: COPILOT STUDIO -->
-  <div class="tier" onclick="toggleTier(event, this)">
+  <div class="tier" id="nervous-system" onclick="toggleTier(event, this)">
     <div class="tier-header">
       <div class="tier-icon">🤖</div>
       <div class="tier-title">
@@ -467,6 +467,19 @@
   }
   checkBrainstem();
   setInterval(checkBrainstem, 5000);
+
+  // ── Deep link: #hippocampus opens Tier 2, collapses others ──
+  function applyHash() {
+    const hash = location.hash.replace('#', '');
+    if (!hash) return;
+    const target = document.getElementById(hash);
+    if (!target || !target.classList.contains('tier')) return;
+    document.querySelectorAll('.tier').forEach(t => t.classList.remove('open'));
+    target.classList.add('open');
+    setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+  applyHash();
+  window.addEventListener('hashchange', applyHash);
 </script>
 </body>
 </html>
