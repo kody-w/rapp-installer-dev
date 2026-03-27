@@ -772,9 +772,10 @@ def call_copilot(messages, tools=None):
     resp = requests.post(url, headers=headers, json=body, timeout=60)
     if resp.status_code != 200:
         error_detail = resp.text[:500] if resp.text else "No details"
+        _tlog("api.error", {"model": MODEL, "status": resp.status_code, "detail": error_detail[:300]}, level="error")
         print(f"[brainstem] API error {resp.status_code} with model '{MODEL}': {error_detail}")
-        # On 429/5xx, cycle through other available models before giving up
-        if resp.status_code in (429, 500, 502, 503):
+        # On 400/429/5xx, cycle through other available models before giving up
+        if resp.status_code in (400, 429, 500, 502, 503):
             tried = {MODEL}
             fallback_ids = [m["id"] for m in AVAILABLE_MODELS if m["id"] != MODEL]
             for fallback_model in fallback_ids:
@@ -1424,10 +1425,30 @@ def diagnostics_report():
             issue_url = issue_data.get("html_url", "")
             _tlog("diagnostics.report_created", {"issue_url": issue_url})
             return jsonify({"status": "ok", "issue_url": issue_url})
-        else:
-            err = resp.text[:300]
-            _tlog("diagnostics.report_failed", {"status": resp.status_code, "error": err}, level="error")
-            return jsonify({"error": f"GitHub API returned {resp.status_code}: {err}"}), resp.status_code
+
+        # ghu_ tokens from device code don't have repo scope — try gh CLI
+        if resp.status_code in (403, 404):
+            _tlog("diagnostics.report_api_403_trying_cli", level="warn")
+            try:
+                result = subprocess.run(
+                    ["gh", "issue", "create",
+                     "--repo", "kody-w/rapp-installer",
+                     "--title", f"🆘 Help request — v{VERSION}",
+                     "--body", issue_body,
+                     "--label", "help-wanted"],
+                    capture_output=True, text=True, timeout=30,
+                )
+                if result.returncode == 0:
+                    issue_url = result.stdout.strip()
+                    _tlog("diagnostics.report_created_via_cli", {"issue_url": issue_url})
+                    return jsonify({"status": "ok", "issue_url": issue_url})
+                _tlog("diagnostics.report_cli_failed", {"stderr": result.stderr[:200]}, level="error")
+            except Exception as cli_err:
+                _tlog("diagnostics.report_cli_error", {"error": str(cli_err)}, level="error")
+
+        err = resp.text[:300]
+        _tlog("diagnostics.report_failed", {"status": resp.status_code, "error": err}, level="error")
+        return jsonify({"error": f"GitHub API returned {resp.status_code}: {err}"}), resp.status_code
     except Exception as e:
         _tlog("diagnostics.report_error", {"error": str(e)}, level="error")
         return jsonify({"error": str(e)}), 500
