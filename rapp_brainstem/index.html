@@ -603,7 +603,8 @@
       <p class="login-success" style="font-size:16px;font-weight:600">Connected to GitHub Copilot</p>
     </div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #30363d">
-      <a href="#" onclick="shareWithAdmin(); return false;" style="color:#f0883e;font-size:13px;text-decoration:none">🆘 Having trouble? Get help</a>
+      <a href="#" onclick="switchAccount(); return false;" style="color:#58a6ff;font-size:13px;text-decoration:none;margin-right:16px">🔄 Switch account</a>
+      <a href="#" onclick="shareWithAdmin(); return false;" style="color:#f0883e;font-size:13px;text-decoration:none">🆘 Get help</a>
     </div>
   </div>
 </div>
@@ -863,6 +864,31 @@
   let loginInProgress = false;
   let loginDismissed = false;
 
+  async function switchAccount() {
+    clog('auth.switch_account');
+    try {
+      const r = await fetch(`${API}/login/switch`, { method: 'POST' });
+      const d = await r.json();
+      if (d.error) { alert(d.error); return; }
+      localStorage.removeItem('brainstem_auth');
+      // Show the login overlay with the new code
+      document.getElementById('login-step1').style.display = 'none';
+      document.getElementById('login-step2').style.display = 'block';
+      document.getElementById('login-step3').style.display = 'none';
+      document.getElementById('device-code').textContent = d.user_code;
+      document.getElementById('verify-link').href = d.verification_uri;
+      document.getElementById('login-status').textContent = 'Waiting for authorization...';
+      document.getElementById('login-overlay').style.display = 'flex';
+      loginInProgress = true;
+      loginDismissed = false;
+      copyDeviceCode();
+      window.open(d.verification_uri, '_blank');
+      pollLogin();
+    } catch (e) {
+      alert('Failed to switch: ' + e.message);
+    }
+  }
+
   function showLoginOverlay() {
     loginDismissed = false;
     document.getElementById('login-step1').style.display = 'block';
@@ -912,8 +938,9 @@
       if (d.status === 'ok') {
         dot.className = d.copilot === '\u2713' ? 'dot' : 'dot pending';
         statusText.textContent = d.copilot === '\u2713' ? 'connected' : 'connecting...';
-        statusText.style.cursor = 'default';
-        statusText.onclick = null;
+        statusText.style.cursor = 'pointer';
+        statusText.title = 'Click to switch account';
+        statusText.onclick = () => { if (confirm('Switch GitHub account?')) switchAccount(); };
         hideLoginOverlay();
         localStorage.setItem('brainstem_auth', 'true');
         loginInProgress = false;
@@ -1326,9 +1353,14 @@
           const wrap = appendMsg('system', '');
           wrap.querySelector('.bubble').innerHTML =
             `<strong>${username}</strong> doesn't have GitHub Copilot access. ` +
-            `<a href="#" onclick="showLoginOverlay(); return false;" style="color:#58a6ff">Sign in with a different account</a> ` +
+            `<a href="#" onclick="switchAccount(); return false;" style="color:#58a6ff">Switch account</a> ` +
             `or <a href="https://github.com/github-copilot/signup" target="_blank" style="color:#58a6ff">sign up for Copilot</a>.`;
           localStorage.removeItem('brainstem_auth');
+        } else if (d.error.includes('usage limit') || d.error.includes('quota')) {
+          const wrap = appendMsg('system', '');
+          wrap.querySelector('.bubble').innerHTML =
+            `${d.error}<br>` +
+            `<a href="#" onclick="switchAccount(); return false;" style="color:#58a6ff;font-size:12px">🔄 Switch to a different account</a>`;
         } else if (d.error.includes('Not authenticated') || d.error.includes('Copilot') || d.error.includes('Sign in')) {
           const wrap = appendMsg('system', '');
           wrap.querySelector('.bubble').innerHTML =

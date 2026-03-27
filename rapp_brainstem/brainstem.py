@@ -995,6 +995,32 @@ def login_status():
         })
     return jsonify({"pending": False})
 
+@app.route("/login/switch", methods=["POST"])
+def login_switch():
+    """Switch GitHub account — clears all cached tokens and starts fresh login."""
+    global _copilot_token_cache, _pending_login
+    _tlog("auth.account_switch")
+
+    # Clear everything: memory caches, disk caches, pending login
+    _copilot_token_cache = {"token": None, "endpoint": None, "expires_at": 0}
+    _pending_login = {}
+    _save_pending_login()
+
+    for f in (_token_file, _copilot_cache_file):
+        try:
+            if os.path.exists(f):
+                os.remove(f)
+        except Exception:
+            pass
+
+    # Start a fresh device code flow immediately
+    try:
+        data = start_device_code_login(force_new=True)
+        _tlog("auth.switch_new_code", {"user_code": data["user_code"]})
+        return jsonify({"status": "ok", **data})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/models", methods=["GET"])
 def list_models():
     """List available models and current selection. Fetches from Copilot API on first call."""
