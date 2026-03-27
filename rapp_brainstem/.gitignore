@@ -2,6 +2,7 @@
 .copilot_token
 .copilot_session
 .copilot_pending
+.brainstem_book.json
 .env
 
 # Python

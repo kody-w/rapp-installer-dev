@@ -23,6 +23,7 @@ import threading
 import importlib.util
 import subprocess
 import traceback
+from datetime import datetime, timezone
 
 import requests
 from flask import Flask, request, jsonify, send_from_directory
@@ -97,6 +98,60 @@ def _fetch_copilot_models():
     except Exception as e:
         print(f"[brainstem] Could not fetch models (using defaults): {e}")
         _models_fetched = True
+
+# ── Flight Recorder (book.json telemetry) ─────────────────────────────────────
+
+_flight_log = []
+_flight_log_lock = threading.Lock()
+_FLIGHT_LOG_MAX = 2000
+_flight_log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".brainstem_book.json")
+
+def _tlog(event_type, data=None, level="info"):
+    """Append an event to the flight recorder."""
+    entry = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "type": event_type,
+        "level": level,
+    }
+    if data:
+        entry["data"] = data
+    with _flight_log_lock:
+        _flight_log.append(entry)
+        if len(_flight_log) > _FLIGHT_LOG_MAX:
+            _flight_log[:] = _flight_log[-_FLIGHT_LOG_MAX:]
+
+def _tlog_save():
+    """Persist flight log to disk (called periodically and on export)."""
+    try:
+        with _flight_log_lock:
+            snapshot = list(_flight_log)
+        with open(_flight_log_file, "w") as f:
+            json.dump(snapshot, f)
+    except Exception:
+        pass
+
+def _tlog_load():
+    """Load previous flight log from disk on startup."""
+    global _flight_log
+    if not os.path.exists(_flight_log_file):
+        return
+    try:
+        with open(_flight_log_file) as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            with _flight_log_lock:
+                _flight_log = data[-_FLIGHT_LOG_MAX:]
+    except Exception:
+        pass
+
+def _tlog_autosave():
+    """Background thread: flush flight log to disk every 30s."""
+    while True:
+        time.sleep(30)
+        _tlog_save()
+
+# Start autosave thread
+threading.Thread(target=_tlog_autosave, daemon=True).start()
 
 # ── GitHub token ──────────────────────────────────────────────────────────────
 
@@ -176,6 +231,7 @@ def save_github_token(token, refresh_token=None):
     }
     with open(_token_file, "w") as f:
         json.dump(data, f)
+    _tlog("auth.token_saved", {"prefix": token[:4], "has_refresh": bool(refresh_token)})
     print(f"[brainstem] GitHub token saved (prefix: {token[:4]}...)")
 
 def refresh_github_token():
@@ -261,18 +317,22 @@ def get_copilot_token():
     disk_cache = _load_copilot_cache()
     if disk_cache:
         _copilot_token_cache = disk_cache
+        _tlog("auth.copilot_restored", {"expires_in": int(disk_cache['expires_at'] - time.time())})
         print(f"[brainstem] Copilot token restored from cache (expires in {int(disk_cache['expires_at'] - time.time())}s)")
         return disk_cache["token"], disk_cache["endpoint"]
     
     # 3. Exchange GitHub token for Copilot token
     github_token = get_github_token()
     if not github_token:
+        _tlog("auth.no_github_token", level="warn")
         raise RuntimeError("Not authenticated. Visit /login in your browser to sign in with GitHub.")
     
+    _tlog("auth.copilot_exchange", {"token_prefix": github_token[:4]})
     resp = _exchange_github_for_copilot(github_token)
     
     # 4. If error, the GitHub token may have expired — try refreshing it
     if resp.status_code in (401, 403, 404):
+        _tlog("auth.copilot_exchange_failed", {"status": resp.status_code, "trying_refresh": True}, level="warn")
         refreshed = refresh_github_token()
         if refreshed:
             resp = _exchange_github_for_copilot(refreshed)
@@ -290,6 +350,7 @@ def get_copilot_token():
                 # Extract username from error message
                 detail_msg = err_details.get("message", "")
                 username = detail_msg.split("as ")[-1].rstrip(".") if "as " in detail_msg else "this account"
+                _tlog("auth.no_copilot_access", {"username": username}, level="error")
                 print(f"[brainstem] No Copilot access for {username}")
                 # Delete the bad token so health check shows unauthenticated
                 if os.path.exists(_token_file):
@@ -302,6 +363,7 @@ def get_copilot_token():
                 err_msg = err_body.get("message", resp.text[:200])
             except Exception:
                 err_msg = resp.text[:200]
+            _tlog("auth.copilot_exchange_error", {"status": resp.status_code, "error": err_msg[:200]}, level="error")
             print(f"[brainstem] Copilot token exchange failed (HTTP {resp.status_code}): {err_msg}")
             raise RuntimeError(
                 f"Copilot auth failed ({resp.status_code}): {err_msg}. Sign in with GitHub to retry."
@@ -314,6 +376,7 @@ def get_copilot_token():
     expires_at = data.get("expires_at", time.time() + 600)
     
     if not copilot_token:
+        _tlog("auth.copilot_no_token", level="error")
         raise RuntimeError("Failed to get Copilot API token. Check your Copilot subscription.")
     
     _copilot_token_cache = {
@@ -323,6 +386,7 @@ def get_copilot_token():
     }
     _save_copilot_cache(copilot_token, endpoint, expires_at)
     
+    _tlog("auth.copilot_ready", {"expires_in": int(expires_at - time.time()), "endpoint": endpoint})
     print(f"[brainstem] Copilot token refreshed (expires in {int(expires_at - time.time())}s)")
     return copilot_token, endpoint
 
@@ -371,6 +435,7 @@ def start_device_code_login(force_new=False):
 
     # Reuse existing non-expired code (e.g. user refreshed the page)
     if not force_new and _pending_login and time.time() < _pending_login.get("expires_at", 0):
+        _tlog("login.reuse_code", {"user_code": _pending_login["user_code"], "expires_in": int(_pending_login["expires_at"] - time.time())})
         print(f"[brainstem] Reusing existing device code (expires in {int(_pending_login['expires_at'] - time.time())}s)")
         return {
             "user_code": _pending_login["user_code"],
@@ -393,6 +458,7 @@ def start_device_code_login(force_new=False):
         "expires_at": time.time() + data.get("expires_in", 900),
     }
     _save_pending_login()
+    _tlog("login.device_code_started", {"user_code": data["user_code"]})
     print(f"[brainstem] Device code login started: {data['user_code']}")
 
     # Start background polling so token is captured even if browser disconnects
@@ -445,6 +511,7 @@ def poll_device_code():
     if time.time() >= _pending_login.get("expires_at", 0):
         _pending_login = {}
         _save_pending_login()
+        _tlog("login.code_expired", level="warn")
         raise RuntimeError("Login code expired. Please try again.")
 
     resp = requests.post(
@@ -462,6 +529,7 @@ def poll_device_code():
     if data.get("access_token"):
         token = data["access_token"]
         refresh = data.get("refresh_token")
+        _tlog("login.authorized", {"token_prefix": token[:4], "has_refresh": bool(refresh)})
         print(f"[brainstem] Device code authorized! Token prefix: {token[:4]}...")
         save_github_token(token, refresh)
         _pending_login = {}
@@ -470,6 +538,7 @@ def poll_device_code():
 
     error = data.get("error", "")
     if error == "slow_down":
+        _tlog("login.slow_down", level="warn")
         _pending_login["interval"] = _pending_login.get("interval", 5) + 5
         return None
     if error == "authorization_pending":
@@ -477,6 +546,7 @@ def poll_device_code():
     if error == "expired_token":
         _pending_login = {}
         _save_pending_login()
+        _tlog("login.expired_token", level="warn")
         raise RuntimeError("Login code expired. Please try again.")
     if error:
         _pending_login = {}
@@ -800,6 +870,8 @@ def chat():
     if not user_input:
         return jsonify({"error": "user_input is required"}), 400
 
+    _tlog("chat.request", {"session_id": session_id, "input_len": len(user_input), "history_len": len(history)})
+
     try:
         soul   = load_soul()
         agents = load_agents()
@@ -860,6 +932,7 @@ def chat():
     except requests.exceptions.HTTPError as e:
         traceback.print_exc()
         status = e.response.status_code if e.response is not None else 502
+        _tlog("chat.error", {"model": MODEL, "status": status}, level="error")
         return jsonify({
             "error": f"Model '{MODEL}' returned {status}. All fallback models also failed — try again shortly or switch models.",
             "model": MODEL,
@@ -868,6 +941,7 @@ def chat():
 
     except Exception as e:
         traceback.print_exc()
+        _tlog("chat.error", {"error": str(e)[:200]}, level="error")
         return jsonify({"error": str(e)}), 500
 
 # ── /health endpoint ──────────────────────────────────────────────────────────
@@ -1209,9 +1283,74 @@ def debug_auth():
 
     return jsonify(result)
 
+# ── Diagnostics / Flight Recorder (book.json) ─────────────────────────────────
+
+@app.route("/diagnostics", methods=["GET"])
+def diagnostics():
+    """Return the flight recorder log as JSON. Add ?tail=N for last N events."""
+    tail = request.args.get("tail", type=int)
+    with _flight_log_lock:
+        events = list(_flight_log)
+    if tail:
+        events = events[-tail:]
+    return jsonify({
+        "version": VERSION,
+        "model": MODEL,
+        "uptime_events": len(events),
+        "events": events,
+    })
+
+@app.route("/diagnostics/book.json", methods=["GET"])
+def diagnostics_export():
+    """Export full flight recorder as book.json — the brainstem's story."""
+    _tlog_save()  # Flush to disk first
+    with _flight_log_lock:
+        events = list(_flight_log)
+
+    # Build the book
+    github_token = get_github_token()
+    book = {
+        "title": "RAPP Brainstem Flight Recorder",
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "version": VERSION,
+        "config": {
+            "model": MODEL,
+            "soul_path": SOUL_PATH,
+            "agents_path": AGENTS_PATH,
+            "port": PORT,
+            "voice_mode": VOICE_MODE,
+        },
+        "auth_state": {
+            "github_token_exists": github_token is not None,
+            "github_token_prefix": github_token[:4] + "..." if github_token else None,
+            "token_file_exists": os.path.exists(_token_file),
+            "copilot_cache_valid": bool(_copilot_token_cache["token"] and time.time() < _copilot_token_cache["expires_at"] - 60),
+            "pending_login": bool(_pending_login),
+        },
+        "agents_loaded": list(load_agents().keys()) if True else [],
+        "events": events,
+    }
+
+    from flask import Response
+    return Response(
+        json.dumps(book, indent=2),
+        mimetype="application/json",
+        headers={"Content-Disposition": "attachment; filename=book.json"},
+    )
+
+@app.route("/diagnostics/clear", methods=["POST"])
+def diagnostics_clear():
+    """Clear the flight recorder."""
+    with _flight_log_lock:
+        _flight_log.clear()
+    _tlog_save()
+    return jsonify({"status": "ok", "message": "Flight recorder cleared."})
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    _tlog_load()  # Restore previous flight log
+    _tlog("server.starting", {"version": VERSION, "model": MODEL, "port": PORT})
     print(f"\n🧠 RAPP Brainstem v{VERSION} starting on http://localhost:{PORT}")
     print(f"   Soul:   {SOUL_PATH}")
     print(f"   Agents: {AGENTS_PATH}")
@@ -1219,6 +1358,8 @@ if __name__ == "__main__":
     print(f"   Voice:  {'on' if VOICE_MODE else 'off'} (POST /voice/toggle to change)")
     print(f"   Auth:   GitHub Copilot API (via gh CLI)\n")
     load_soul()
-    load_agents()
+    agents = load_agents()
+    _tlog("server.agents_loaded", {"agents": list(agents.keys())})
     _load_pending_login()  # Resume any in-progress device code login
+    _tlog("server.ready", {"url": f"http://localhost:{PORT}"})
     app.run(host="0.0.0.0", port=PORT, debug=False)
