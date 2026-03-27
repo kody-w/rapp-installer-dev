@@ -933,11 +933,16 @@ def chat():
     except requests.exceptions.HTTPError as e:
         traceback.print_exc()
         status = e.response.status_code if e.response is not None else 502
-        _tlog("chat.error", {"model": MODEL, "status": status}, level="error")
+        detail = (e.response.text[:300] if e.response is not None else str(e)[:300])
+        _tlog("chat.error", {"model": MODEL, "status": status, "detail": detail[:200]}, level="error")
+        if status == 429 or "quota" in detail.lower():
+            msg = "Copilot usage limit reached — wait a minute and try again."
+        else:
+            msg = f"Model '{MODEL}' returned {status}. All fallback models also failed — try again shortly or switch models."
         return jsonify({
-            "error": f"Model '{MODEL}' returned {status}. All fallback models also failed — try again shortly or switch models.",
+            "error": msg,
             "model": MODEL,
-            "detail": str(e)[:300]
+            "detail": detail
         }), 502
 
     except Exception as e:
@@ -1416,7 +1421,7 @@ def diagnostics_report():
             json={
                 "title": f"🆘 Help request — v{VERSION}",
                 "body": issue_body,
-                "labels": ["help-wanted"],
+                "labels": [],
             },
             timeout=15,
         )
@@ -1434,8 +1439,7 @@ def diagnostics_report():
                     ["gh", "issue", "create",
                      "--repo", "kody-w/rapp-installer",
                      "--title", f"🆘 Help request — v{VERSION}",
-                     "--body", issue_body,
-                     "--label", "help-wanted"],
+                     "--body", issue_body],
                     capture_output=True, text=True, timeout=30,
                 )
                 if result.returncode == 0:
