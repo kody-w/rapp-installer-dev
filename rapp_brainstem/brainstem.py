@@ -19,6 +19,7 @@ import json
 import uuid
 import glob
 import time
+import threading
 import importlib.util
 import subprocess
 import traceback
@@ -328,10 +329,54 @@ def get_copilot_token():
 # ── Device code OAuth flow ────────────────────────────────────────────────────
 
 _pending_login = {}
+_login_bg_thread = None
+_pending_login_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".copilot_pending")
 
-def start_device_code_login():
-    """Start GitHub device code OAuth flow. Returns user_code and verification_uri."""
+def _save_pending_login():
+    """Persist pending device code to disk so it survives server restarts."""
+    try:
+        if _pending_login:
+            with open(_pending_login_file, "w") as f:
+                json.dump(_pending_login, f)
+        elif os.path.exists(_pending_login_file):
+            os.remove(_pending_login_file)
+    except Exception:
+        pass
+
+def _load_pending_login():
+    """Load pending device code from disk on startup."""
     global _pending_login
+    if not os.path.exists(_pending_login_file):
+        return
+    try:
+        with open(_pending_login_file) as f:
+            data = json.load(f)
+        if data.get("device_code") and time.time() < data.get("expires_at", 0):
+            _pending_login = data
+            print(f"[brainstem] Resumed pending device code: {data.get('user_code')} (expires in {int(data['expires_at'] - time.time())}s)")
+            _start_bg_poll()
+        else:
+            # Expired — clean up
+            os.remove(_pending_login_file)
+    except Exception:
+        pass
+
+def start_device_code_login(force_new=False):
+    """Start GitHub device code OAuth flow. Returns user_code and verification_uri.
+    
+    Reuses an existing pending code if it hasn't expired (prevents refresh-kills-auth bug).
+    Set force_new=True to always request a fresh code.
+    """
+    global _pending_login, _login_bg_thread
+
+    # Reuse existing non-expired code (e.g. user refreshed the page)
+    if not force_new and _pending_login and time.time() < _pending_login.get("expires_at", 0):
+        print(f"[brainstem] Reusing existing device code (expires in {int(_pending_login['expires_at'] - time.time())}s)")
+        return {
+            "user_code": _pending_login["user_code"],
+            "verification_uri": _pending_login["verification_uri"],
+        }
+
     resp = requests.post(
         "https://github.com/login/device/code",
         headers={"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
@@ -342,20 +387,66 @@ def start_device_code_login():
     data = resp.json()
     _pending_login = {
         "device_code": data["device_code"],
+        "user_code": data["user_code"],
+        "verification_uri": data["verification_uri"],
         "interval": data.get("interval", 5),
         "expires_at": time.time() + data.get("expires_in", 900),
     }
+    _save_pending_login()
+    print(f"[brainstem] Device code login started: {data['user_code']}")
+
+    # Start background polling so token is captured even if browser disconnects
+    _start_bg_poll()
+
     return {
         "user_code": data["user_code"],
         "verification_uri": data["verification_uri"],
     }
+
+def _start_bg_poll():
+    """Start a background thread that polls GitHub for device code completion."""
+    global _login_bg_thread
+    if _login_bg_thread and _login_bg_thread.is_alive():
+        return  # Already running
+    _login_bg_thread = threading.Thread(target=_bg_poll_loop, daemon=True)
+    _login_bg_thread.start()
+
+def _bg_poll_loop():
+    """Background loop: polls GitHub for the device code token."""
+    while _pending_login:
+        interval = _pending_login.get("interval", 5)
+        time.sleep(interval)
+        if not _pending_login:
+            break
+        try:
+            token = poll_device_code()
+            if token:
+                print(f"[brainstem] Background poll: token acquired (prefix: {token[:4]}...)")
+                # Eagerly exchange for Copilot token
+                try:
+                    get_copilot_token()
+                    print("[brainstem] Copilot session established via background poll")
+                except Exception as e:
+                    print(f"[brainstem] Eager Copilot exchange deferred: {e}")
+                break
+        except RuntimeError as e:
+            print(f"[brainstem] Background poll stopped: {e}")
+            break
+        except Exception as e:
+            print(f"[brainstem] Background poll error: {e}")
+            # Keep polling on transient errors
 
 def poll_device_code():
     """Poll for completed device code authorization. Returns token or None."""
     global _pending_login
     if not _pending_login:
         return None
-    
+
+    if time.time() >= _pending_login.get("expires_at", 0):
+        _pending_login = {}
+        _save_pending_login()
+        raise RuntimeError("Login code expired. Please try again.")
+
     resp = requests.post(
         "https://github.com/login/oauth/access_token",
         headers={"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
@@ -367,24 +458,31 @@ def poll_device_code():
         timeout=10,
     )
     data = resp.json()
-    
+
     if data.get("access_token"):
         token = data["access_token"]
         refresh = data.get("refresh_token")
+        print(f"[brainstem] Device code authorized! Token prefix: {token[:4]}...")
         save_github_token(token, refresh)
         _pending_login = {}
+        _save_pending_login()
         return token
-    
+
     error = data.get("error", "")
-    if error in ("authorization_pending", "slow_down"):
+    if error == "slow_down":
+        _pending_login["interval"] = _pending_login.get("interval", 5) + 5
+        return None
+    if error == "authorization_pending":
         return None  # Keep polling
     if error == "expired_token":
         _pending_login = {}
-        raise RuntimeError("Login expired. Please try again.")
+        _save_pending_login()
+        raise RuntimeError("Login code expired. Please try again.")
     if error:
         _pending_login = {}
+        _save_pending_login()
         raise RuntimeError(f"Login failed: {error}")
-    
+
     return None
 
 # ── Soul loader ───────────────────────────────────────────────────────────────
@@ -807,8 +905,15 @@ def login_poll():
 
 @app.route("/login/status", methods=["GET"])
 def login_status():
-    """Check if a login flow is currently in progress."""
-    return jsonify({"pending": bool(_pending_login)})
+    """Check if a login flow is currently in progress. Returns code info for UI resume."""
+    if _pending_login and time.time() < _pending_login.get("expires_at", 0):
+        return jsonify({
+            "pending": True,
+            "user_code": _pending_login.get("user_code"),
+            "verification_uri": _pending_login.get("verification_uri"),
+            "expires_in": int(_pending_login["expires_at"] - time.time()),
+        })
+    return jsonify({"pending": False})
 
 @app.route("/models", methods=["GET"])
 def list_models():
@@ -1115,4 +1220,5 @@ if __name__ == "__main__":
     print(f"   Auth:   GitHub Copilot API (via gh CLI)\n")
     load_soul()
     load_agents()
+    _load_pending_login()  # Resume any in-progress device code login
     app.run(host="0.0.0.0", port=PORT, debug=False)
