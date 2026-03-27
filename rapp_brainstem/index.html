@@ -753,6 +753,7 @@
       <button class="toolbar-link" onclick="document.getElementById('chat-import').click()" title="Import transcript">Import</button>
       <input type="file" id="chat-import" accept=".json" style="display:none" onchange="importChat(event)">
       <button class="toolbar-link" onclick="clearChat()">Clear</button>
+      <button class="toolbar-link" onclick="shareWithAdmin()" title="Share diagnostics with admin for help" style="color:#f0883e">🆘 Get Help</button>
       <button class="toolbar-link dev-only" onclick="toggleDevMode()" id="dev-toggle">Dev</button>
     </div>
   </div>
@@ -822,6 +823,61 @@
       URL.revokeObjectURL(a.href);
     } catch (e) {
       alert('Failed to export diagnostics: ' + e.message);
+    }
+  }
+
+  async function shareWithAdmin() {
+    clog('client.share_with_admin');
+    try {
+      const r = await fetch(`${API}/diagnostics/book.json`);
+      const book = await r.json();
+      book.client_events = _clientLog;
+      book.conversation_snapshot = {
+        history_length: (typeof history !== 'undefined') ? history.length : 0,
+        transcript_length: (typeof fullTranscript !== 'undefined') ? fullTranscript.length : 0,
+      };
+      // Include last few chat messages for context (no secrets)
+      if (typeof fullTranscript !== 'undefined' && fullTranscript.length > 0) {
+        book.recent_chat = fullTranscript.slice(-6).map(m => ({
+          role: m.role, content: (m.content || '').slice(0, 500), timestamp: m.timestamp
+        }));
+      }
+      const bookStr = JSON.stringify(book, null, 2);
+
+      // Build GitHub issue with the book as body
+      const issueTitle = encodeURIComponent('🆘 Help request — brainstem diagnostics');
+      const errEvents = book.events.filter(e => e.level === 'error' || e.level === 'warn').slice(-5);
+      const summary = errEvents.map(e => `- \`${e.type}\` ${e.data ? JSON.stringify(e.data) : ''}`).join('\n') || 'No errors detected';
+      const issueBody = encodeURIComponent(
+        `## What happened\n\n_Describe your issue here_\n\n` +
+        `## Recent warnings/errors\n\n${summary}\n\n` +
+        `## Diagnostics\n\n<details><summary>book.json (click to expand)</summary>\n\n\`\`\`json\n${bookStr.slice(0, 50000)}\n\`\`\`\n\n</details>`
+      );
+      const issueUrl = `https://github.com/kody-w/rapp-installer/issues/new?title=${issueTitle}&body=${issueBody}&labels=help-wanted`;
+
+      // Also download locally as backup
+      const blob = new Blob([bookStr], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'book.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+      // Open the issue in a new tab
+      window.open(issueUrl, '_blank');
+
+      appendMsg('system',
+        '📖 Diagnostics saved as book.json and a GitHub issue was opened. ' +
+        'If the issue tab didn\'t open, drag book.json into a new issue at ' +
+        'github.com/kody-w/rapp-installer/issues/new'
+      );
+    } catch (e) {
+      // Fallback: just download the book
+      try { await exportBook(); } catch {}
+      appendMsg('system',
+        '📖 Diagnostics saved as book.json. Share it at ' +
+        'github.com/kody-w/rapp-installer/issues/new or send it to your admin.'
+      );
     }
   }
 
@@ -1300,7 +1356,9 @@
           wrap.querySelector('.bubble').innerHTML =
             'Not signed in. <a href="#" onclick="showLoginOverlay(); return false;" style="color:#58a6ff">Sign in with GitHub</a> to use Copilot AI.';
         } else {
-          appendMsg('system', `Error: ${d.error}`);
+          const wrap = appendMsg('system', '');
+          wrap.querySelector('.bubble').innerHTML =
+            `Error: ${d.error}<br><a href="#" onclick="shareWithAdmin(); return false;" style="color:#f0883e;font-size:12px">🆘 Share with admin for help</a>`;
         }
       } else {
         clog('chat.response', { response_len: d.response?.length, has_agents: !!d.agent_logs });
@@ -1327,7 +1385,9 @@
     } catch (err) {
       removeTyping();
       clog('chat.network_error', { error: err.message });
-      appendMsg('system', `Could not reach brainstem: ${err.message}`);
+      const wrap = appendMsg('system', '');
+      wrap.querySelector('.bubble').innerHTML =
+        `Could not reach brainstem: ${err.message}<br><a href="#" onclick="shareWithAdmin(); return false;" style="color:#f0883e;font-size:12px">🆘 Share with admin for help</a>`;
     }
 
     document.getElementById('send').disabled = false;
