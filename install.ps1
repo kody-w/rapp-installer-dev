@@ -7,8 +7,9 @@ $ErrorActionPreference = "Stop"
 
 $BRAINSTEM_HOME = "$env:USERPROFILE\.brainstem"
 $BRAINSTEM_BIN = "$env:USERPROFILE\.local\bin"
-$REPO_URL = "https://github.com/kody-w/rapp-installer.git"
-$REMOTE_VERSION_URL = "https://raw.githubusercontent.com/kody-w/rapp-installer/main/rapp_brainstem/VERSION"
+$CHANNEL = if ($env:RAPP_CHANNEL) { $env:RAPP_CHANNEL } else { "rapp-installer" }
+$REPO_URL = "https://github.com/kody-w/$CHANNEL.git"
+$REMOTE_VERSION_URL = "https://raw.githubusercontent.com/kody-w/$CHANNEL/main/rapp_brainstem/VERSION"
 
 function Print-Banner {
     Write-Host ""
