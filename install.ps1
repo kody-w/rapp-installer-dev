@@ -241,12 +241,25 @@ function Install-Brainstem {
             if (Test-Path $AgentsDir) { Copy-Item "$AgentsDir\*.py" "$Backup\" -ErrorAction SilentlyContinue }
             Write-Host "  [OK] Backed up soul, agents, config" -ForegroundColor Green
 
-            # Pull latest
+            # Pull latest (use fetch + reset to handle force-pushes)
             Push-Location "$BRAINSTEM_HOME\src"
-            try { git stash --quiet 2>&1 | Out-Null } catch {}
-            try { git pull --quiet 2>&1 | Out-Null } catch {}
+            git fetch origin --quiet 2>&1 | Out-Null
+            git reset --hard origin/main --quiet 2>&1 | Out-Null
+            $pullOk = $LASTEXITCODE -eq 0
             Pop-Location
-            Write-Host "  [OK] Framework updated" -ForegroundColor Green
+
+            if ($pullOk) {
+                Write-Host "  [OK] Framework updated" -ForegroundColor Green
+            } else {
+                Write-Host "  [..] git pull failed — re-cloning..." -ForegroundColor Yellow
+                Remove-Item -Recurse -Force "$BRAINSTEM_HOME\src" -ErrorAction SilentlyContinue
+                git clone --quiet $REPO_URL "$BRAINSTEM_HOME\src" 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "  [X] Failed to update repository" -ForegroundColor Red
+                    exit 1
+                }
+                Write-Host "  [OK] Framework re-cloned" -ForegroundColor Green
+            }
 
             # Restore user files
             if (Test-Path "$Backup\soul.md") { Copy-Item "$Backup\soul.md" $SoulFile -Force }
@@ -284,8 +297,9 @@ function Run-PipInstall {
 
 function Check-PythonDeps {
     $py = if ($script:PythonExe) { $script:PythonExe } else { "python" }
-    $proc = Start-Process -FilePath $py -ArgumentList "-c", "import flask, flask_cors, requests, dotenv" -NoNewWindow -Wait -PassThru
-    return $proc.ExitCode -eq 0
+    $depCheck = "import flask, flask_cors, requests, dotenv"
+    & $py -c $depCheck 2>&1 | Out-Null
+    return $LASTEXITCODE -eq 0
 }
 
 function Setup-Dependencies {
