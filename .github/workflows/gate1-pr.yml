@@ -1,0 +1,59 @@
+name: "Gate 1 — PR Tests"
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_call:  # allows promote-canary to invoke this
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate install.sh syntax
+        run: bash -n install.sh
+
+      - name: Validate install.sh with shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "."
+          additional_files: "install.sh deploy.sh"
+          severity: warning
+
+      - name: Validate install.ps1 syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "$env:GITHUB_WORKSPACE/install.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.ToString() }
+            exit 1
+          }
+          Write-Host "install.ps1 syntax OK"
+
+      - name: Run installer test suite
+        run: bash tests/test_installer.sh
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r rapp_brainstem/requirements.txt pytest
+
+      - name: Run unit tests
+        working-directory: rapp_brainstem
+        run: python -m pytest test_local_agents.py -v

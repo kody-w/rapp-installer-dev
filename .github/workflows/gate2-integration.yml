@@ -1,0 +1,111 @@
+name: "Gate 2 — Integration Tests"
+
+on:
+  schedule:
+    - cron: "0 5 * * *"  # 5 AM UTC daily (runs before canary promotion at 6 AM)
+  workflow_dispatch:       # manual trigger
+  workflow_call:           # allows promote-canary to invoke this
+
+jobs:
+  fresh-install-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fresh install (Linux)
+        run: |
+          bash install.sh &
+          INSTALL_PID=$!
+          # Wait up to 60s for server to start
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:7071/health > /dev/null 2>&1; then
+              echo "Server healthy after ${i}s"
+              kill $INSTALL_PID 2>/dev/null || true
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start within 60s"
+          kill $INSTALL_PID 2>/dev/null || true
+          exit 1
+
+  fresh-install-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fresh install (macOS)
+        run: |
+          bash install.sh &
+          INSTALL_PID=$!
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:7071/health > /dev/null 2>&1; then
+              echo "Server healthy after ${i}s"
+              kill $INSTALL_PID 2>/dev/null || true
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start within 60s"
+          kill $INSTALL_PID 2>/dev/null || true
+          exit 1
+
+  fresh-install-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fresh install (Windows)
+        shell: pwsh
+        run: |
+          # Run installer in background
+          $job = Start-Job -ScriptBlock {
+            Set-Location $using:PWD
+            . .\install.ps1
+          }
+          # Wait up to 90s for server to start
+          $healthy = $false
+          for ($i = 1; $i -le 90; $i++) {
+            Start-Sleep -Seconds 1
+            try {
+              $r = Invoke-WebRequest -Uri "http://localhost:7071/health" -UseBasicParsing -TimeoutSec 2
+              if ($r.StatusCode -eq 200) {
+                Write-Host "Server healthy after ${i}s"
+                $healthy = $true
+                break
+              }
+            } catch {}
+          }
+          Stop-Job $job -ErrorAction SilentlyContinue
+          Remove-Job $job -Force -ErrorAction SilentlyContinue
+          if (-not $healthy) {
+            Write-Error "Server failed to start within 90s"
+            exit 1
+          }
+
+  python-deps-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install and verify all dependencies
+        run: |
+          pip install -r rapp_brainstem/requirements.txt
+          python -c "import flask, flask_cors, requests, dotenv"
+          echo "All dependencies verified"

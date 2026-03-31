@@ -1,0 +1,73 @@
+name: "Promote to Canary"
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # 6 AM UTC daily (after Gate 2 at 5 AM)
+  workflow_dispatch:       # manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.compare.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new commits since last canary promotion
+        id: compare
+        run: |
+          # Get the latest canary commit message to find the source SHA
+          CANARY_SHA=$(gh api repos/kody-w/rapp-installer-canary/commits/main --jq '.sha' 2>/dev/null || echo "none")
+          DEV_SHA=$(git rev-parse HEAD)
+          if [ "$CANARY_SHA" = "none" ] || [ "$CANARY_SHA" != "$DEV_SHA" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "New commits found — will promote"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No new commits — skipping"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
+
+  gate1:
+    needs: check-changes
+    if: needs.check-changes.outputs.has_changes == 'true'
+    uses: ./.github/workflows/gate1-pr.yml
+
+  gate2:
+    needs: check-changes
+    if: needs.check-changes.outputs.has_changes == 'true'
+    uses: ./.github/workflows/gate2-integration.yml
+
+  promote:
+    needs: [gate1, gate2]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Stamp canary version
+        run: |
+          BASE_VERSION=$(cat rapp_brainstem/VERSION | tr -d '[:space:]')
+          CANARY_VERSION="${BASE_VERSION}-canary.$(date +%Y%m%d)"
+          echo "$CANARY_VERSION" > rapp_brainstem/VERSION
+          echo "CANARY_VERSION=$CANARY_VERSION" >> "$GITHUB_ENV"
+          echo "Canary version: $CANARY_VERSION"
+
+      - name: Push to canary repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add canary https://x-access-token:${{ secrets.PIPELINE_TOKEN }}@github.com/kody-w/rapp-installer-canary.git
+          git add rapp_brainstem/VERSION
+          git commit -m "canary: ${{ env.CANARY_VERSION }} (from dev $(git rev-parse --short HEAD))"
+          git push canary HEAD:main --force
+          echo "Promoted to canary: ${{ env.CANARY_VERSION }}"
+        env:
+          GH_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
