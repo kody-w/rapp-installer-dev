@@ -70,6 +70,52 @@ Agents must:
 
 The `agents/experimental/` subdirectory exists for agents that should not be auto-loaded.
 
+## Release Pipeline
+
+NEVER push directly to `rapp-installer` (production). All changes flow: dev → canary → production.
+
+```
+rapp-installer-dev  →  rapp-installer-canary  →  rapp-installer  (production)
+```
+
+- **Dev:** All PRs land here. CI runs Gate 1 (syntax, unit tests) on every push.
+- **Canary:** Auto-promoted nightly from dev if Gate 1 + Gate 2 (fresh install on Win/Mac/Linux) pass. Soaks 24h minimum.
+- **Production:** Manual promote only from canary. Users' one-liner always points here.
+
+Install one-liners use `RAPP_CHANNEL` env var to select repo:
+```powershell
+# Dev
+$env:RAPP_CHANNEL="rapp-installer-dev"; irm https://raw.githubusercontent.com/kody-w/rapp-installer-dev/main/install.ps1 | iex
+# Canary
+$env:RAPP_CHANNEL="rapp-installer-canary"; irm https://raw.githubusercontent.com/kody-w/rapp-installer-canary/main/install.ps1 | iex
+# Production (default — no env var needed)
+irm https://raw.githubusercontent.com/kody-w/rapp-installer/main/install.ps1 | iex
+```
+
+Manual promotion with git CLI (if CI token expires):
+```powershell
+# Dev → Canary
+git clone https://github.com/kody-w/rapp-installer-dev.git temp && cd temp
+git remote add canary https://github.com/kody-w/rapp-installer-canary.git
+git push canary main --force && cd .. && rm -rf temp
+
+# Canary → Production
+git clone https://github.com/kody-w/rapp-installer-canary.git temp && cd temp
+git remote add prod https://github.com/kody-w/rapp-installer.git
+(Get-Content rapp_brainstem/VERSION) -replace '-canary\.\d+','' | Set-Content rapp_brainstem/VERSION
+git add rapp_brainstem/VERSION && git commit -m "release: v$(Get-Content rapp_brainstem/VERSION)"
+git push prod main --force && cd .. && rm -rf temp
+```
+
+Refresh expired pipeline token:
+```powershell
+gh auth refresh
+gh auth token | gh secret set PIPELINE_TOKEN --repo kody-w/rapp-installer-dev
+gh auth token | gh secret set PIPELINE_TOKEN --repo kody-w/rapp-installer-canary
+```
+
+See `docs/release-pipeline.md` for full details.
+
 ## Environment
 
 Configuration via `.env` (auto-created from `.env.example` by `start.sh`):

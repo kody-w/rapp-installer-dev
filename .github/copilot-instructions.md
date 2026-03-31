@@ -116,6 +116,84 @@ class MyAgent(BasicAgent):
 - For storage, use `from utils.azure_file_storage import AzureFileStorageManager` — the shim handles local vs cloud
 - Return a string from `perform()` — this becomes the tool result the LLM sees
 
+## Release Pipeline
+
+NEVER push directly to `rapp-installer` (production). All changes flow through a three-repo pipeline:
+
+```
+rapp-installer-dev  →  rapp-installer-canary  →  rapp-installer  (production)
+     (develop)            (nightly/soak)            (stable)
+```
+
+### Repos and install one-liners
+
+| Channel | Repo | One-liner |
+|---------|------|-----------|
+| Dev | `rapp-installer-dev` | `$env:RAPP_CHANNEL="rapp-installer-dev"; irm https://raw.githubusercontent.com/kody-w/rapp-installer-dev/main/install.ps1 \| iex` |
+| Canary | `rapp-installer-canary` | `$env:RAPP_CHANNEL="rapp-installer-canary"; irm https://raw.githubusercontent.com/kody-w/rapp-installer-canary/main/install.ps1 \| iex` |
+| Production | `rapp-installer` | `irm https://raw.githubusercontent.com/kody-w/rapp-installer/main/install.ps1 \| iex` |
+
+The `RAPP_CHANNEL` env var controls which repo the installer clones from. Omitting it defaults to production.
+
+### CI workflows
+
+- **Gate 1** (`gate1-pr.yml` on dev) — Runs on every PR/push: shell syntax, PowerShell parse, `test_installer.sh`, unit tests.
+- **Gate 2** (`gate2-integration.yml` on dev) — Nightly: fresh install on Windows/macOS/Linux VMs, health check, dep verification.
+- **Promote to Canary** (`promote-canary.yml` on dev) — Nightly at 6 AM UTC: if Gate 1 + Gate 2 pass, pushes dev/main to canary with a version suffix like `0.5.5-canary.20260401`.
+- **Promote to Production** (`promote-production.yml` on canary) — Manual dispatch only. Requires typing `PROMOTE` to confirm. Checks 24h soak time, runs tests again, then pushes to production with a clean semver and git tag.
+
+### Promoting manually with git CLI
+
+If the `PIPELINE_TOKEN` secret expires or CI is down, promote manually:
+
+**Dev → Canary:**
+```powershell
+cd ~
+git clone https://github.com/kody-w/rapp-installer-dev.git temp-promote
+cd temp-promote
+git remote add canary https://github.com/kody-w/rapp-installer-canary.git
+git push canary main --force
+cd ..
+rm -rf temp-promote
+```
+
+**Canary → Production:**
+```powershell
+cd ~
+git clone https://github.com/kody-w/rapp-installer-canary.git temp-promote
+cd temp-promote
+git remote add production https://github.com/kody-w/rapp-installer.git
+(Get-Content rapp_brainstem/VERSION) -replace '-canary\.\d+','' | Set-Content rapp_brainstem/VERSION
+git add rapp_brainstem/VERSION
+git commit -m "release: v$(Get-Content rapp_brainstem/VERSION)"
+git push production main --force
+cd ..
+rm -rf temp-promote
+```
+
+### Refreshing the pipeline token
+
+```powershell
+gh auth refresh
+gh auth token | gh secret set PIPELINE_TOKEN --repo kody-w/rapp-installer-dev
+gh auth token | gh secret set PIPELINE_TOKEN --repo kody-w/rapp-installer-canary
+```
+
+For a long-lived token, generate a classic PAT at https://github.com/settings/tokens with `repo` + `workflow` scopes and set it as `PIPELINE_TOKEN` on both repos.
+
+### Rollback
+
+```bash
+# Fast: revert last commit on production
+git clone https://github.com/kody-w/rapp-installer.git && cd rapp-installer
+git revert HEAD && git push origin main
+
+# Pin to known-good tag
+git reset --hard v0.5.4 && git push --force-with-lease origin main
+```
+
+See `docs/release-pipeline.md` for the full strategy document.
+
 ## Key Conventions
 
 - **Python 3.11** target runtime; venv at `~/.brainstem/venv`
