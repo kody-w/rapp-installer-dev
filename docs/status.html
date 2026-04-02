@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAPP Brainstem — Pipeline Status</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .header {
+    text-align: center;
+    padding: 20px 0 12px;
+  }
+  .header h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #f0f6fc;
+  }
+  .header .subtitle {
+    font-size: 0.85rem;
+    color: #7d8590;
+    margin-top: 4px;
+  }
+  .refresh-bar {
+    text-align: center;
+    margin: 8px 0 16px;
+    font-size: 0.75rem;
+    color: #7d8590;
+  }
+  .refresh-bar button {
+    background: #21262d;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+  .refresh-bar button:active { background: #30363d; }
+
+  .channel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .channel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .channel-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .channel-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-production { background: #1a7f37; color: #fff; }
+  .badge-canary { background: #9a6700; color: #fff; }
+  .badge-dev { background: #1f6feb; color: #fff; }
+
+  .version-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #21262d;
+  }
+  .version-label { color: #7d8590; font-size: 0.85rem; }
+  .version-value { font-family: 'SF Mono', SFMono-Regular, monospace; font-size: 0.9rem; }
+
+  .gates {
+    margin-top: 12px;
+  }
+  .gate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #21262d;
+  }
+  .gate:last-child { border-bottom: none; }
+  .gate-name {
+    font-size: 0.85rem;
+    color: #e6edf3;
+  }
+  .gate-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .gate-time {
+    font-size: 0.7rem;
+    color: #7d8590;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .dot-success { background: #3fb950; box-shadow: 0 0 6px #3fb95066; }
+  .dot-failure { background: #f85149; box-shadow: 0 0 6px #f8514966; }
+  .dot-pending { background: #d29922; box-shadow: 0 0 6px #d2992266; }
+  .dot-running { background: #d29922; box-shadow: 0 0 6px #d2992266; animation: pulse 1.5s infinite; }
+  .dot-unknown { background: #484f58; }
+  .dot-skipped { background: #484f58; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .commit-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #21262d;
+  }
+  .commit-msg {
+    font-size: 0.8rem;
+    color: #e6edf3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .commit-meta {
+    font-size: 0.7rem;
+    color: #7d8590;
+    margin-top: 2px;
+  }
+
+  .pipeline-flow {
+    text-align: center;
+    padding: 12px 0;
+    color: #7d8590;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+  .pipeline-flow .arrow { color: #3fb950; }
+
+  .error-banner {
+    background: #f8514922;
+    border: 1px solid #f85149;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    display: none;
+  }
+
+  .soak-timer {
+    font-size: 0.8rem;
+    color: #d29922;
+    margin-top: 4px;
+  }
+  .soak-timer.ready { color: #3fb950; }
+
+  a { color: #58a6ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #7d8590;
+  }
+  .loading::after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+  @keyframes dots {
+    0% { content: ''; }
+    33% { content: '.'; }
+    66% { content: '..'; }
+    100% { content: '...'; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>RAPP Brainstem</h1>
+  <div class="subtitle">Pipeline Status</div>
+</div>
+
+<div class="pipeline-flow">
+  dev <span class="arrow">&rarr;</span> canary <span class="arrow">&rarr;</span> production
+</div>
+
+<div id="error-banner" class="error-banner"></div>
+<div id="content"><div class="loading">Loading status</div></div>
+
+<div class="refresh-bar">
+  <span id="last-updated"></span>
+  <button onclick="refresh()">Refresh</button>
+</div>
+
+<script>
+const REPOS = [
+  { id: 'production', name: 'Production', repo: 'kody-w/rapp-installer', badge: 'badge-production' },
+  { id: 'canary', name: 'Canary', repo: 'kody-w/rapp-installer-canary', badge: 'badge-canary' },
+  { id: 'dev', name: 'Dev', repo: 'kody-w/rapp-installer-dev', badge: 'badge-dev' },
+];
+
+const WORKFLOW_NAMES = {
+  'kody-w/rapp-installer-dev': [
+    { name: 'Gate 1 — PR Tests', file: 'gate1-pr.yml' },
+    { name: 'Gate 2 — Integration', file: 'gate2-integration.yml' },
+    { name: 'Promote to Canary', file: 'promote-canary.yml' },
+  ],
+  'kody-w/rapp-installer-canary': [
+    { name: 'Promote to Production', file: 'promote-production.yml' },
+  ],
+  'kody-w/rapp-installer': [],
+};
+
+async function ghFetch(url) {
+  const r = await fetch(`https://api.github.com/${url}`, {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  });
+  if (!r.ok) throw new Error(`GitHub API ${r.status}: ${url}`);
+  return r.json();
+}
+
+async function getVersion(repo) {
+  try {
+    const r = await fetch(`https://raw.githubusercontent.com/${repo}/main/rapp_brainstem/VERSION`);
+    if (!r.ok) return '—';
+    return (await r.text()).trim();
+  } catch { return '—'; }
+}
+
+async function getLatestCommit(repo) {
+  try {
+    const commits = await ghFetch(`repos/${repo}/commits?per_page=1`);
+    if (!commits.length) return null;
+    const c = commits[0];
+    return {
+      sha: c.sha.slice(0, 7),
+      message: c.commit.message.split('\n')[0],
+      date: c.commit.committer.date,
+      author: c.commit.author.name,
+    };
+  } catch { return null; }
+}
+
+async function getWorkflowRuns(repo) {
+  const workflows = WORKFLOW_NAMES[repo] || [];
+  if (!workflows.length) return [];
+
+  try {
+    const runs = await ghFetch(`repos/${repo}/actions/runs?per_page=20`);
+    return workflows.map(w => {
+      const run = runs.workflow_runs?.find(r => r.name === w.name);
+      return {
+        name: w.name,
+        status: run ? run.status : 'unknown',
+        conclusion: run ? run.conclusion : null,
+        updated: run ? run.updated_at : null,
+        url: run ? run.html_url : `https://github.com/${repo}/actions`,
+      };
+    });
+  } catch {
+    return workflows.map(w => ({
+      name: w.name, status: 'unknown', conclusion: null, updated: null,
+      url: `https://github.com/${repo}/actions`,
+    }));
+  }
+}
+
+function dotClass(status, conclusion) {
+  if (status === 'completed') {
+    if (conclusion === 'success') return 'dot-success';
+    if (conclusion === 'failure') return 'dot-failure';
+    if (conclusion === 'skipped') return 'dot-skipped';
+    return 'dot-unknown';
+  }
+  if (status === 'in_progress' || status === 'queued') return 'dot-running';
+  return 'dot-unknown';
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+
+function soakHours(dateStr) {
+  if (!dateStr) return 0;
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 3600000);
+}
+
+function renderChannel(ch, version, commit, runs, canarySoakDate) {
+  const gates = runs.map(r => `
+    <div class="gate">
+      <span class="gate-name"><a href="${r.url}">${r.name}</a></span>
+      <div class="gate-info">
+        <span class="gate-time">${timeAgo(r.updated)}</span>
+        <span class="status-dot ${dotClass(r.status, r.conclusion)}"></span>
+      </div>
+    </div>
+  `).join('');
+
+  let soakHtml = '';
+  if (ch.id === 'canary' && canarySoakDate) {
+    const h = soakHours(canarySoakDate);
+    const ready = h >= 24;
+    soakHtml = `<div class="soak-timer ${ready ? 'ready' : ''}">
+      Soak: ${h}h${ready ? ' — ready to promote' : ` / 24h minimum`}
+    </div>`;
+  }
+
+  const commitHtml = commit ? `
+    <div class="commit-row">
+      <div class="commit-msg">${commit.message}</div>
+      <div class="commit-meta">${commit.sha} &middot; ${commit.author} &middot; ${timeAgo(commit.date)}</div>
+    </div>
+  ` : '';
+
+  return `
+    <div class="channel">
+      <div class="channel-header">
+        <span class="channel-name">${ch.name}</span>
+        <span class="channel-badge ${ch.badge}">${ch.id}</span>
+      </div>
+      <div class="version-row">
+        <span class="version-label">Version</span>
+        <span class="version-value">${version}</span>
+      </div>
+      ${commitHtml}
+      ${soakHtml}
+      ${gates ? '<div class="gates">' + gates + '</div>' : ''}
+    </div>
+  `;
+}
+
+async function refresh() {
+  const el = document.getElementById('content');
+  const errEl = document.getElementById('error-banner');
+  errEl.style.display = 'none';
+
+  try {
+    const results = await Promise.all(REPOS.map(async ch => {
+      const [version, commit, runs] = await Promise.all([
+        getVersion(ch.repo),
+        getLatestCommit(ch.repo),
+        getWorkflowRuns(ch.repo),
+      ]);
+      return { ch, version, commit, runs };
+    }));
+
+    const canaryResult = results.find(r => r.ch.id === 'canary');
+    const canarySoakDate = canaryResult?.commit?.date;
+
+    el.innerHTML = results.map(r =>
+      renderChannel(r.ch, r.version, r.commit, r.runs, r.ch.id === 'canary' ? canarySoakDate : null)
+    ).join('');
+
+    document.getElementById('last-updated').textContent =
+      `Updated ${new Date().toLocaleTimeString()}`;
+  } catch (e) {
+    errEl.textContent = `Failed to load: ${e.message}. GitHub API has a 60 req/hr limit for unauthenticated requests.`;
+    errEl.style.display = 'block';
+  }
+}
+
+// Initial load
+refresh();
+
+// Auto-refresh every 2 minutes
+setInterval(refresh, 120000);
+</script>
+</body>
+</html>
