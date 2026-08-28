@@ -1,0 +1,36 @@
+name: "Refresh status snapshot"
+
+# Article XXIV (the Static Data Covenant, kody-w/RAR CONSTITUTION.md): docs/status.html
+# reads committed data, never api.github.com from the browser. This workflow is the
+# CI harvester that keeps docs/state/status_snapshot.json true. It does not gate the
+# release train (gate1/gate2/promote-canary are untouched) — purely a data refresh.
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-status
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build status snapshot
+        run: python3 scripts/build_status_snapshot.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit only real changes
+        run: |
+          git config user.name "status-snapshot-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/state/status_snapshot.json
+          git diff --cached --quiet || { git commit -m "status: refresh snapshot [skip ci]"; git push; }

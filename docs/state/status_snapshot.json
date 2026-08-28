@@ -1,0 +1,345 @@
+{
+  "generated": "2026-08-28T02:29:19Z",
+  "repos": {
+    "kody-w/rapp-installer": {
+      "commits": [
+        {
+          "commit": {
+            "author": {
+              "name": "Kody Wildfeuer"
+            },
+            "committer": {
+              "date": "2026-08-28T01:10:02Z"
+            },
+            "message": "Merge pull request #45 from kody-w/copilot/brainstem-scout-callback\n\nAdd rapp@brainstem marketplace"
+          },
+          "sha": "4817c876cf16c77dbf93a13d10e9d9ebcbb2ee27"
+        }
+      ],
+      "workflow_runs": {
+        "workflow_runs": [
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/33132014031",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-08-28T01:10:54Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/33131074755",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-08-28T00:53:41Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/33130931015",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-08-28T00:51:10Z"
+          },
+          {
+            "conclusion": "action_required",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/32566065883",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-08-22T09:51:32Z"
+          },
+          {
+            "conclusion": "action_required",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/32566029186",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-08-22T09:50:43Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/32565888819",
+            "name": "Running Copilot cloud agent",
+            "status": "completed",
+            "updated_at": "2026-08-22T09:51:59Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29110671260",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-10T17:21:55Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29062399588",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-10T01:27:59Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29062278780",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-10T01:24:35Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29057865982",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-09T23:38:20Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29057118661",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-07-09T23:22:26Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29050285167",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-09T21:07:44Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29050097606",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-07-09T21:06:33Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29049980362",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-07-09T21:02:32Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29044540270",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-09T19:30:38Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29044404248",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-07-09T19:29:03Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29023109341",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-09T13:53:54Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29022998418",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-07-09T13:53:11Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29022880326",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-07-09T13:51:31Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29022053682",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-07-09T13:38:02Z"
+          }
+        ]
+      }
+    },
+    "kody-w/rapp-installer-canary": {
+      "commits": [
+        {
+          "commit": {
+            "author": {
+              "name": "Kody Wildfeuer"
+            },
+            "committer": {
+              "date": "2026-07-16T18:56:38Z"
+            },
+            "message": "Estate drift steamroll 2026-07-16: converge to RAPP canon\n\n- 'Prototyping Platform' -> 'Prototype Platform' (the acronym law) where flagged\n- retired v2/v3 rappid residue marked legacy/read-forever at each site (specs,\n  constitutions, vault docs, trackers, code comments, JSON bridges with\n  same-line notes) \u2014 history kept, nothing re-minted\nDriven by the shared rapp-drift-lint; this repo now lints clean.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+          },
+          "sha": "8bb6b75d2cfc0227bfd69e0995a308e4f2309cdc"
+        }
+      ],
+      "workflow_runs": {
+        "workflow_runs": []
+      }
+    },
+    "kody-w/rapp-installer-dev": {
+      "commits": [
+        {
+          "commit": {
+            "author": {
+              "name": "Kody Wildfeuer"
+            },
+            "committer": {
+              "date": "2026-07-16T18:56:40Z"
+            },
+            "message": "Estate drift steamroll 2026-07-16: converge to RAPP canon\n\n- 'Prototyping Platform' -> 'Prototype Platform' (the acronym law) where flagged\n- retired v2/v3 rappid residue marked legacy/read-forever at each site (specs,\n  constitutions, vault docs, trackers, code comments, JSON bridges with\n  same-line notes) \u2014 history kept, nothing re-minted\nDriven by the shared rapp-drift-lint; this repo now lints clean.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+          },
+          "sha": "7cf2dcc4adad0a9272947484ffc0c0463beadfd9"
+        }
+      ],
+      "workflow_runs": {
+        "workflow_runs": [
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/29526023975",
+            "name": "Gate 1 \u2014 PR Tests",
+            "status": "completed",
+            "updated_at": "2026-07-16T18:57:02Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/28340583184",
+            "name": "Gate 1 \u2014 PR Tests",
+            "status": "completed",
+            "updated_at": "2026-06-29T00:05:33Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26812840467",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-06-02T10:10:54Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26809626658",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-06-02T09:06:07Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26751295975",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-06-01T11:15:38Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26748663094",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-06-01T10:16:43Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26707839171",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-05-31T08:39:56Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26707331396",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-05-31T08:14:20Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26679028027",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-05-30T08:22:17Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26678221166",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-05-30T07:40:33Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26629892451",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-05-29T09:42:11Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26627245086",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-05-29T08:42:45Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26567373207",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-05-28T09:52:20Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26564176499",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-05-28T08:43:20Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26502994383",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-05-27T09:35:27Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26500297085",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-05-27T08:39:05Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26444510053",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-05-26T09:42:49Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26441183423",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-05-26T08:31:32Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26394387709",
+            "name": "Promote to Canary",
+            "status": "completed",
+            "updated_at": "2026-05-25T09:55:46Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26392118799",
+            "name": "Gate 2 \u2014 Integration Tests",
+            "status": "completed",
+            "updated_at": "2026-05-25T08:56:12Z"
+          }
+        ]
+      }
+    }
+  },
+  "schema": "rapp-installer-dev-status-snapshot/1"
+}
