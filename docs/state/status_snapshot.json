@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-28T02:29:19Z",
+  "generated": "2026-08-28T15:27:17Z",
   "repos": {
     "kody-w/rapp-installer": {
       "commits": [
@@ -9,15 +9,29 @@
               "name": "Kody Wildfeuer"
             },
             "committer": {
-              "date": "2026-08-28T01:10:02Z"
+              "date": "2026-08-28T04:35:43Z"
             },
-            "message": "Merge pull request #45 from kody-w/copilot/brainstem-scout-callback\n\nAdd rapp@brainstem marketplace"
+            "message": "Merge pull request #46 from kody-w/copilot/rapp-at-x-article-xxv\n\nFollow RAR marketplace Article XXV"
           },
-          "sha": "4817c876cf16c77dbf93a13d10e9d9ebcbb2ee27"
+          "sha": "49db80c8c6b6caa7647369beaf477d374a8f293c"
         }
       ],
       "workflow_runs": {
         "workflow_runs": [
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/33142265023",
+            "name": "pages build and deployment",
+            "status": "completed",
+            "updated_at": "2026-08-28T04:36:24Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/33141366414",
+            "name": "preflight",
+            "status": "completed",
+            "updated_at": "2026-08-28T04:18:44Z"
+          },
           {
             "conclusion": "success",
             "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/33132014031",
@@ -143,20 +157,6 @@
             "name": "preflight",
             "status": "completed",
             "updated_at": "2026-07-09T13:53:11Z"
-          },
-          {
-            "conclusion": "success",
-            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29022880326",
-            "name": "preflight",
-            "status": "completed",
-            "updated_at": "2026-07-09T13:51:31Z"
-          },
-          {
-            "conclusion": "success",
-            "html_url": "https://github.com/kody-w/rapp-installer/actions/runs/29022053682",
-            "name": "pages build and deployment",
-            "status": "completed",
-            "updated_at": "2026-07-09T13:38:02Z"
           }
         ]
       }
@@ -188,15 +188,29 @@
               "name": "Kody Wildfeuer"
             },
             "committer": {
-              "date": "2026-07-16T18:56:40Z"
+              "date": "2026-08-28T03:02:18Z"
             },
-            "message": "Estate drift steamroll 2026-07-16: converge to RAPP canon\n\n- 'Prototyping Platform' -> 'Prototype Platform' (the acronym law) where flagged\n- retired v2/v3 rappid residue marked legacy/read-forever at each site (specs,\n  constitutions, vault docs, trackers, code comments, JSON bridges with\n  same-line notes) \u2014 history kept, nothing re-minted\nDriven by the shared rapp-drift-lint; this repo now lints clean.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+            "message": "pages: Article XXIV \u2014 status dashboard reads a CI-harvested snapshot, not api.github.com\n\ndocs/status.html's ghFetch() called api.github.com from the browser for each\nchannel's latest commit and last 20 Actions runs (6 unauthenticated calls per\nload, repeated every 2-minute auto-refresh). Now scripts/build_status_snapshot.py\nharvests the same data, in the same nested shape the API returns (trimmed to\nonly the fields the page reads), into docs/state/status_snapshot.json. A new\nbuild-status.yml keeps it fresh every 15 minutes \u2014 it doesn't touch gate1/gate2/\npromote-canary. getVersion() already read raw.githubusercontent.com and is\nuntouched.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
           },
-          "sha": "7cf2dcc4adad0a9272947484ffc0c0463beadfd9"
+          "sha": "4bdae3a0c5dd8b367dd8c0402f05199da1fd8815"
         }
       ],
       "workflow_runs": {
         "workflow_runs": [
+          {
+            "conclusion": null,
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/33185197716",
+            "name": "Refresh status snapshot",
+            "status": "in_progress",
+            "updated_at": "2026-08-28T15:27:12Z"
+          },
+          {
+            "conclusion": "failure",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/33137737624",
+            "name": "Gate 1 \u2014 PR Tests",
+            "status": "completed",
+            "updated_at": "2026-08-28T03:03:06Z"
+          },
           {
             "conclusion": "failure",
             "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/29526023975",
@@ -322,20 +336,6 @@
             "name": "Gate 2 \u2014 Integration Tests",
             "status": "completed",
             "updated_at": "2026-05-26T08:31:32Z"
-          },
-          {
-            "conclusion": "failure",
-            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26394387709",
-            "name": "Promote to Canary",
-            "status": "completed",
-            "updated_at": "2026-05-25T09:55:46Z"
-          },
-          {
-            "conclusion": "failure",
-            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26392118799",
-            "name": "Gate 2 \u2014 Integration Tests",
-            "status": "completed",
-            "updated_at": "2026-05-25T08:56:12Z"
           }
         ]
       }
