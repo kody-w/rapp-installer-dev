@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-30T22:48:19Z",
+  "generated": "2026-08-31T01:23:32Z",
   "repos": {
     "kody-w/rapp-installer": {
       "commits": [
@@ -188,21 +188,28 @@
               "name": "status-snapshot-bot"
             },
             "committer": {
-              "date": "2026-08-30T19:51:06Z"
+              "date": "2026-08-30T22:48:19Z"
             },
             "message": "status: refresh snapshot [skip ci]"
           },
-          "sha": "d375af5590966eb91f6f941d4f21bfdeeb27e0b9"
+          "sha": "2e807daf9c8dccca260488ce5589226417bbb155"
         }
       ],
       "workflow_runs": {
         "workflow_runs": [
           {
             "conclusion": null,
-            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/33340117504",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/33347427895",
             "name": "Refresh status snapshot",
             "status": "in_progress",
-            "updated_at": "2026-08-30T22:48:15Z"
+            "updated_at": "2026-08-31T01:23:29Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/33340117504",
+            "name": "Refresh status snapshot",
+            "status": "completed",
+            "updated_at": "2026-08-30T22:48:23Z"
           },
           {
             "conclusion": "success",
@@ -329,13 +336,6 @@
             "name": "Gate 2 \u2014 Integration Tests",
             "status": "completed",
             "updated_at": "2026-06-01T10:16:43Z"
-          },
-          {
-            "conclusion": "failure",
-            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/26707839171",
-            "name": "Promote to Canary",
-            "status": "completed",
-            "updated_at": "2026-05-31T08:39:56Z"
           }
         ]
       }
