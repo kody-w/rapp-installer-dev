@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-15T13:37:45Z",
+  "generated": "2026-09-15T18:15:12Z",
   "repos": {
     "kody-w/rapp-installer": {
       "commits": [
@@ -188,21 +188,28 @@
               "name": "status-snapshot-bot"
             },
             "committer": {
-              "date": "2026-09-15T07:49:21Z"
+              "date": "2026-09-15T13:37:45Z"
             },
             "message": "status: refresh snapshot [skip ci]"
           },
-          "sha": "1a45190a7a23d79a33b3e39832e1185efc5ce60e"
+          "sha": "415c3438b98769d404ac237aa5f78b8380fd3d92"
         }
       ],
       "workflow_runs": {
         "workflow_runs": [
           {
             "conclusion": null,
-            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/34976211999",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/35006296864",
             "name": "Refresh status snapshot",
             "status": "in_progress",
-            "updated_at": "2026-09-15T13:37:41Z"
+            "updated_at": "2026-09-15T18:15:07Z"
+          },
+          {
+            "conclusion": "success",
+            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/34976211999",
+            "name": "Refresh status snapshot",
+            "status": "completed",
+            "updated_at": "2026-09-15T13:37:49Z"
           },
           {
             "conclusion": "success",
@@ -329,13 +336,6 @@
             "name": "Refresh status snapshot",
             "status": "completed",
             "updated_at": "2026-09-12T10:53:08Z"
-          },
-          {
-            "conclusion": "success",
-            "html_url": "https://github.com/kody-w/rapp-installer-dev/actions/runs/34676700223",
-            "name": "Refresh status snapshot",
-            "status": "completed",
-            "updated_at": "2026-09-12T05:52:54Z"
           }
         ]
       }
