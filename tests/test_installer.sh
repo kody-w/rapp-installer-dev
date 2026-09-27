@@ -250,7 +250,7 @@ assert len(result) > 0
 result = a.perform(topic='install')
 assert 'skill.md' in result and 'curl' in result and 'irm' in result
 print('ok')
-" 2>&1)
+" 2>&1) || true
 if [ "$AGENT_TEST" = "ok" ]; then
     pass "onboarding agent loads, runs, and returns correct content"
 else
