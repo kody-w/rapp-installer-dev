@@ -22,7 +22,7 @@ Each tier builds on the last. Start with Tier 1. Layer up when the user is ready
 
 ## Instructions for Copilot
 
-Execute these steps autonomously. Only pause and ask the user when marked with .
+Execute these steps autonomously. Only pause and ask the user when marked with ⏸️.
 
 After completing each tier, tell the user what they just learned and offer the next tier. Do not proceed to the next tier unless the user asks.
 
@@ -62,7 +62,7 @@ It auto-installs Python 3.11, Git, and GitHub CLI via winget on a factory Window
 - Ubuntu/Debian: `sudo apt install gh`
 - Windows: `winget install GitHub.cli`
 
-### Step 2: GitHub Authentication
+### Step 2: ⏸️ GitHub Authentication
 
 Tell the user:
 
@@ -131,7 +131,7 @@ curl -s -X POST http://localhost:7071/chat \
  -d '{"user_input": "Hello! What can you do?"}' | python3 -m json.tool
 ```
 
-### Step 5: Tier 1 Complete
+### Step 5: ⏸️ Tier 1 Complete
 
 Tell the user:
 
@@ -192,7 +192,7 @@ func --version 2>/dev/null
 npm install -g azure-functions-core-tools@4 --unsafe-perm true
 ```
 
-### Step 7: Azure Authentication
+### Step 7: ⏸️ Azure Authentication
 
 Tell the user:
 
@@ -300,7 +300,7 @@ If the functions list is empty after deploy:
 az functionapp restart --name $FUNC_NAME --resource-group $RESOURCE_GROUP
 ```
 
-### Step 11: Tier 2 Complete
+### Step 11: ⏸️ Tier 2 Complete
 
 Save the Azure state:
 ```bash
@@ -353,7 +353,7 @@ Tell the user:
 
 Only run this tier if the user asks to connect to Copilot Studio.
 
-### Step 12: Import the Power Platform Solution
+### Step 12: ⏸️ Import the Power Platform Solution
 
 Tell the user:
 
@@ -370,7 +370,7 @@ Tell the user:
 >
 > Let me know when the import is done.
 
-### Step 13: Configure the Connector
+### Step 13: ⏸️ Configure the Connector
 
 Read the saved Azure state:
 ```bash
@@ -389,7 +389,7 @@ Tell the user:
 >
 > Let me know when it's connected.
 
-### Step 14: Publish to Your Organization
+### Step 14: ⏸️ Publish to Your Organization
 
 Tell the user:
 
