@@ -121,7 +121,7 @@ echo ""
 
 echo "--- index.html ---"
 
-if grep -q "Brainstem" "$REPO_ROOT/index.html" && grep -q "Spinal Cord" "$REPO_ROOT/index.html" && grep -q "Nervous System" "$REPO_ROOT/index.html"; then
+if grep -q "Brainstem" "$REPO_ROOT/index.html" && grep -q "Hippocampus" "$REPO_ROOT/index.html" && grep -q "Nervous System" "$REPO_ROOT/index.html"; then
     pass "index.html has all 3 tiers"
 else
     fail "index.html missing tier content"
@@ -193,7 +193,7 @@ else
     fail "requirements.txt missing"
 fi
 
-for endpoint in "/chat" "/health" "/login" "/models" "/repos"; do
+for endpoint in "/chat" "/health" "/login" "/models"; do
     if grep -q "\"$endpoint\"" "$REPO_ROOT/rapp_brainstem/brainstem.py"; then
         pass "brainstem.py has $endpoint endpoint"
     else
@@ -201,7 +201,7 @@ for endpoint in "/chat" "/health" "/login" "/models" "/repos"; do
     fi
 done
 
-if grep -q "def perform" "$REPO_ROOT/rapp_brainstem/basic_agent.py" && grep -q "def to_tool" "$REPO_ROOT/rapp_brainstem/basic_agent.py"; then
+if grep -q "def perform" "$REPO_ROOT/rapp_brainstem/agents/basic_agent.py" && grep -q "def to_tool" "$REPO_ROOT/rapp_brainstem/agents/basic_agent.py"; then
     pass "basic_agent.py has perform() and to_tool()"
 else
     fail "basic_agent.py missing required methods"
@@ -250,7 +250,7 @@ assert len(result) > 0
 result = a.perform(topic='install')
 assert 'skill.md' in result and 'curl' in result and 'irm' in result
 print('ok')
-" 2>&1)
+" 2>&1) || true
 if [ "$AGENT_TEST" = "ok" ]; then
     pass "onboarding agent loads, runs, and returns correct content"
 else

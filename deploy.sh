@@ -17,9 +17,6 @@ NC='\033[0m'
 
 TEMPLATE_URL="https://raw.githubusercontent.com/kody-w/rapp-installer/main/azuredeploy.json"
 
-# Available OpenAI regions
-OPENAI_REGIONS="australiaeast canadaeast eastus eastus2 francecentral japaneast northcentralus norwayeast southcentralus swedencentral switzerlandnorth uksouth westeurope westus westus3"
-
 # Function to read input - handles piped execution by reading from /dev/tty
 read_input() {
     local prompt="$1"
