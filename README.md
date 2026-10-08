@@ -1,3 +1,7 @@
+<!-- retired-notice:start -->
+> **Retired experiment, kept for reference.** The living project is [kody-w/rapp-installer](https://github.com/kody-w/rapp-installer).
+<!-- retired-notice:end -->
+
 > **⚠ DEPRECATED / frozen channel.** This pre-release channel is stale (far behind the grail). Use the canonical kernel grail **[kody-w/rapp-installer](https://github.com/kody-w/rapp-installer)** (the one-liner installs it) and the reference distro **[kody-w/RAPP](https://github.com/kody-w/RAPP)**. This repo is kept for historical reference only.
 
 # 🧠 RAPP Brainstem
